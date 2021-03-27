@@ -15,6 +15,27 @@ pub enum SelectorOrText {
     },
 }
 
+impl SelectorOrText {
+    pub fn select(&self, html: &scraper::Html) -> Result<String, anyhow::Error> {
+        let res = match self {
+            SelectorOrText::Selector { css, inner_html } => {
+                let e = html.select(&css).next()
+                    .ok_or(anyhow::anyhow!("No matches for {:?}", &css.selectors))?;
+
+                if *inner_html { e.inner_html() } else { e.html() }
+            }
+            SelectorOrText::Text { text } => text.clone(),
+            SelectorOrText::SelectorWithFallback { css, inner_html, text } => {
+                html.select(&css).next()
+                    .map(|e| if *inner_html { e.inner_html() } else { e.html() })
+                    .unwrap_or(text.clone())
+            }
+        };
+
+        Ok(res)
+    }
+}
+
 #[derive(Debug)]
 pub struct SelectorWrapper(scraper::Selector);
 

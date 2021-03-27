@@ -16,10 +16,10 @@ struct FixerssConfigArgs {
 
 fn execute_config(rss_config: &fixerss::config::RssConfig) -> std::result::Result<(), anyhow::Error> {
     let page = {
-        log::info!("Fetching {}", &rss_config.channel.link);
+        println!("fetching {}", &rss_config.channel.link);
         let mut req = ureq::get(&rss_config.channel.link);
         if let Some(user_agent) = rss_config.user_agent.as_ref() {
-            log::info!("Setting User-Agent to {}", user_agent);
+            println!("Setting User-Agent to {}", user_agent);
             req = req.set("User-Agent", user_agent);
         }
 
@@ -27,18 +27,15 @@ fn execute_config(rss_config: &fixerss::config::RssConfig) -> std::result::Resul
             .into_string()?
     };
 
-    dbg!(page);
+    println!("parsing page");
+    let item = fixerss::to_rss_item(&page, &rss_config.item)?;
+    println!("title: {:?}", item.title);
+    println!("description: {:?}", item.description);
 
     Ok(())
 }
 
 fn main() -> std::result::Result<(), anyhow::Error> {
-    simple_logger::SimpleLogger::new()
-        .with_level(log::LevelFilter::Off)
-        .with_module_level("fixerss", log::LevelFilter::Debug)
-        .init()
-        .unwrap();
-
     let args = argh::from_env::<FixerssConfigArgs>();
 
     let config: fixerss::config::FixerssConfig = {
@@ -51,7 +48,7 @@ fn main() -> std::result::Result<(), anyhow::Error> {
 
     for (feed_name, rss_config) in config.iter() {
         if matches!(args.feed, Some(ref feed) if feed_name != feed) {
-            log::info!("Skipping {}", &feed_name);
+            println!("Skipping {}", &feed_name);
             continue;
         }
 
