@@ -46,6 +46,6 @@ impl<'de> serde::de::Visitor<'de> for SelectorVisitor {
         E: serde::de::Error, {
         scraper::Selector::parse(v)
             .map_err(|e| E::custom(format!("{:?}", e)))
-            .map(|s| SelectorWrapper(s))
+            .map(SelectorWrapper)
     }
 }

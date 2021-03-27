@@ -5,9 +5,9 @@ pub enum DurationConfig {
     Hours { hours: u32 },
 }
 
-impl Into<chrono::Duration> for DurationConfig {
-    fn into(self) -> chrono::Duration {
-        match self {
+impl From<DurationConfig> for chrono::Duration {
+    fn from(duration_config: DurationConfig) -> Self {
+        match duration_config {
             DurationConfig::Days { days } => chrono::Duration::days(days as i64),
             DurationConfig::Hours { hours } => chrono::Duration::hours(hours as i64)
         }
