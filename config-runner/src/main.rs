@@ -15,7 +15,7 @@ struct FixerssConfigArgs {
 }
 
 fn execute_config(
-    rss_config: &fixerss::config::RssConfig,
+    rss_config: &config::RssConfig,
 ) -> std::result::Result<(), anyhow::Error> {
     let page = {
         println!("fetching {}", &rss_config.channel.link);
@@ -29,7 +29,7 @@ fn execute_config(
     };
 
     println!("parsing page");
-    let item = fixerss::to_rss_item(&page, &rss_config.item)?;
+    let item = config::to_rss_item(&page, &rss_config.item)?;
     println!("title: {:?}", item.title);
     println!("description: {:?}", item.description);
 
@@ -39,7 +39,7 @@ fn execute_config(
 fn main() -> std::result::Result<(), anyhow::Error> {
     let args = argh::from_env::<FixerssConfigArgs>();
 
-    let config: fixerss::config::FixerssConfig = {
+    let config: config::FixerssConfig = {
         let contents = std::fs::read_to_string(&args.config_filename)
             .with_context(|| format!("Failed to read {} to string", &args.config_filename))?;
 

@@ -1,6 +1,11 @@
 use anyhow::Context;
 
-pub mod config;
+pub use config::ChannelConfig;
+pub use config::FixerssConfig;
+pub use config::ItemConfig;
+pub use config::RssConfig;
+
+mod config;
 
 pub fn to_rss_item(
     page: &str,

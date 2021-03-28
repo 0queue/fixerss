@@ -164,6 +164,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fff857943da45f546682664a79488be82e69e43c1a7a2307679ab9afb3a66d2e"
 
 [[package]]
+name = "config"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "rss",
+ "scraper",
+ "serde",
+ "serde_derive",
+]
+
+[[package]]
+name = "config-runner"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "argh",
+ "config",
+ "toml",
+ "ureq",
+]
+
+[[package]]
 name = "const_fn"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -384,16 +407,7 @@ dependencies = [
 name = "fixerss"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "argh",
- "chrono",
  "rocket",
- "rss",
- "scraper",
- "serde",
- "serde_derive",
- "toml",
- "ureq",
 ]
 
 [[package]]
