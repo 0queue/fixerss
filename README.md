@@ -6,5 +6,5 @@ A pair of programs to scrape website and generate an rss feed.
 
 - `fixerss`: The server that reads a config, serves generated rss files,
              and periodically scrapes the configured websites
-- `fixerss-config`: Scrapes the given config and outputs the generated rss.
-                    Useful for debugging css selectors.
+- `config-runner`: Scrapes the given config and outputs the generated rss.
+                   Useful for debugging css selectors.

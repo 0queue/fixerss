@@ -8,3 +8,9 @@ edition = "2018"
 
 [dependencies]
 rocket = { git = "https://github.com/SergioBenitez/Rocket", rev = "3045e0a" }
+serde = "1.0.125"
+
+[dev-dependencies]
+anyhow = "1.0.40"
+reqwest = { version = "0.11.2",  default_features = false, features = ["rustls"] }
+tokio = "1.4.0"

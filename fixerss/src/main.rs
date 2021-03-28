@@ -1,15 +1,6 @@
-use rocket::http::Status;
-use rocket::routes;
-
-#[rocket::get("/health_check")]
-async fn health_check() -> Status {
-    Status::Ok
-}
+use fixerss::fixerss_rocket;
 
 #[rocket::main]
 async fn main() -> Result<(), rocket::error::Error> {
-    rocket::ignite()
-        .mount("/", routes![health_check])
-        .launch()
-        .await
+    fixerss_rocket(None).launch().await
 }
