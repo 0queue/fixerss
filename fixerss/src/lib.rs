@@ -12,8 +12,9 @@ async fn health_check() -> Status {
 
 pub fn fixerss_rocket(port: Option<u16>) -> rocket::Rocket {
     let config = rocket::figment::Figment::new()
-        .merge(OptionConfig("port", port))
-        .merge(rocket::Config::figment());
+        .merge(rocket::Config::figment())
+        // always prio the programmatic config, which does not have to exist
+        .merge(OptionConfig("port", port));
 
     rocket::custom(config)
         .mount("/", routes![health_check])
