@@ -1,7 +1,7 @@
 use anyhow::Context;
 
 #[derive(argh::FromArgs, Debug)]
-/// parse the given config, scrape the chosen site (or all, if none specified),
+/// parse the given feed-spec, scrape the chosen site (or all, if none specified),
 /// and output debugging information alongside the generated rss
 struct FixerssConfigArgs {
     #[argh(positional)]
@@ -14,7 +14,7 @@ struct FixerssConfigArgs {
     feed: Option<String>,
 }
 
-fn execute_config(rss_config: &config::RssConfig) -> std::result::Result<(), anyhow::Error> {
+fn execute_config(rss_config: &feed_spec::RssConfig) -> std::result::Result<(), anyhow::Error> {
     let page = {
         println!("fetching {}", &rss_config.channel.link);
         let mut req = ureq::get(&rss_config.channel.link);
@@ -27,7 +27,7 @@ fn execute_config(rss_config: &config::RssConfig) -> std::result::Result<(), any
     };
 
     println!("parsing page");
-    let item = config::to_rss_item(&page, &rss_config.item)?;
+    let item = feed_spec::to_rss_item(&page, &rss_config.item)?;
     println!("title: {:?}", item.title);
     println!("description: {:?}", item.description);
 
@@ -37,12 +37,12 @@ fn execute_config(rss_config: &config::RssConfig) -> std::result::Result<(), any
 fn main() -> std::result::Result<(), anyhow::Error> {
     let args = argh::from_env::<FixerssConfigArgs>();
 
-    let config: config::FixerssConfig = {
+    let config: feed_spec::FixerssConfig = {
         let contents = std::fs::read_to_string(&args.config_filename)
             .with_context(|| format!("Failed to read {} to string", &args.config_filename))?;
 
         toml::from_str(&contents)
-            .with_context(|| format!("Failed to parse config at {}", &args.config_filename))?
+            .with_context(|| format!("Failed to parse feed-spec at {}", &args.config_filename))?
     };
 
     for (feed_name, rss_config) in config.iter() {

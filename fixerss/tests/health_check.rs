@@ -25,7 +25,9 @@ fn spawn_app() -> u16 {
         listener.local_addr().unwrap().port()
     };
 
-    let _ = tokio::spawn(fixerss_rocket(Some(port)).launch());
+    let _ = tokio::spawn(fixerss_rocket(Some(port), Some("../fixerss.toml"))
+        .unwrap()
+        .launch());
 
     port
 }
