@@ -14,9 +14,7 @@ struct FixerssConfigArgs {
     feed: Option<String>,
 }
 
-fn execute_config(
-    rss_config: &config::RssConfig,
-) -> std::result::Result<(), anyhow::Error> {
+fn execute_config(rss_config: &config::RssConfig) -> std::result::Result<(), anyhow::Error> {
     let page = {
         println!("fetching {}", &rss_config.channel.link);
         let mut req = ureq::get(&rss_config.channel.link);

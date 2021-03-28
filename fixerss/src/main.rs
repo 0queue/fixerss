@@ -8,5 +8,8 @@ async fn health_check() -> Status {
 
 #[rocket::main]
 async fn main() -> Result<(), rocket::error::Error> {
-    rocket::ignite().mount("/", routes![health_check]).launch().await
+    rocket::ignite()
+        .mount("/", routes![health_check])
+        .launch()
+        .await
 }
