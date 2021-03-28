@@ -14,7 +14,9 @@ struct FixerssConfigArgs {
     feed: Option<String>,
 }
 
-fn execute_config(rss_config: &fixerss::config::RssConfig) -> std::result::Result<(), anyhow::Error> {
+fn execute_config(
+    rss_config: &fixerss::config::RssConfig,
+) -> std::result::Result<(), anyhow::Error> {
     let page = {
         println!("fetching {}", &rss_config.channel.link);
         let mut req = ureq::get(&rss_config.channel.link);
@@ -23,8 +25,7 @@ fn execute_config(rss_config: &fixerss::config::RssConfig) -> std::result::Resul
             req = req.set("User-Agent", user_agent);
         }
 
-        req.call()?
-            .into_string()?
+        req.call()?.into_string()?
     };
 
     println!("parsing page");

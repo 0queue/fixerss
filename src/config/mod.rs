@@ -4,7 +4,7 @@ mod selector;
 #[derive(serde_derive::Deserialize, Debug)]
 pub struct FixerssConfig {
     #[serde(flatten)]
-    inner: std::collections::HashMap<String, RssConfig>
+    inner: std::collections::HashMap<String, RssConfig>,
 }
 
 impl std::ops::Deref for FixerssConfig {
@@ -36,4 +36,3 @@ pub struct ItemConfig {
     pub description: selector::SelectorOrText,
     pub guid: Option<String>, // todo parseable, isPermalink, etc
 }
-

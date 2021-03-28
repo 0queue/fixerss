@@ -9,7 +9,7 @@ impl From<DurationConfig> for chrono::Duration {
     fn from(duration_config: DurationConfig) -> Self {
         match duration_config {
             DurationConfig::Days { days } => chrono::Duration::days(days as i64),
-            DurationConfig::Hours { hours } => chrono::Duration::hours(hours as i64)
+            DurationConfig::Hours { hours } => chrono::Duration::hours(hours as i64),
         }
     }
 }

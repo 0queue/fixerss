@@ -6,7 +6,9 @@ pub enum SelectorOrText {
         #[serde(default)]
         inner_html: bool,
     },
-    Text { text: String },
+    Text {
+        text: String,
+    },
     SelectorWithFallback {
         css: SelectorWrapper,
         text: String,
@@ -19,17 +21,33 @@ impl SelectorOrText {
     pub fn select(&self, html: &scraper::Html) -> Result<String, anyhow::Error> {
         let res = match self {
             SelectorOrText::Selector { css, inner_html } => {
-                let e = html.select(&css).next()
+                let e = html
+                    .select(&css)
+                    .next()
                     .ok_or(anyhow::anyhow!("No matches for {:?}", &css.selectors))?;
 
-                if *inner_html { e.inner_html() } else { e.html() }
+                if *inner_html {
+                    e.inner_html()
+                } else {
+                    e.html()
+                }
             }
             SelectorOrText::Text { text } => text.clone(),
-            SelectorOrText::SelectorWithFallback { css, inner_html, text } => {
-                html.select(&css).next()
-                    .map(|e| if *inner_html { e.inner_html() } else { e.html() })
-                    .unwrap_or(text.clone())
-            }
+            SelectorOrText::SelectorWithFallback {
+                css,
+                inner_html,
+                text,
+            } => html
+                .select(&css)
+                .next()
+                .map(|e| {
+                    if *inner_html {
+                        e.inner_html()
+                    } else {
+                        e.html()
+                    }
+                })
+                .unwrap_or(text.clone()),
         };
 
         Ok(res)
@@ -48,8 +66,12 @@ impl std::ops::Deref for SelectorWrapper {
 }
 
 impl<'de> serde::Deserialize<'de> for SelectorWrapper {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, <D as serde::Deserializer<'de>>::Error>
-        where D: serde::Deserializer<'de> {
+    fn deserialize<D>(
+        deserializer: D,
+    ) -> std::result::Result<Self, <D as serde::Deserializer<'de>>::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
         deserializer.deserialize_str(SelectorVisitor)
     }
 }
@@ -63,8 +85,10 @@ impl<'de> serde::de::Visitor<'de> for SelectorVisitor {
         formatter.write_str("a string containing a css selector")
     }
 
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> where
-        E: serde::de::Error, {
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
         scraper::Selector::parse(v)
             .map_err(|e| E::custom(format!("{:?}", e)))
             .map(SelectorWrapper)
