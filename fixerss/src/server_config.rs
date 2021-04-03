@@ -4,13 +4,15 @@ use rocket::figment::value::Map;
 // too many things named feed-spec flying about
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
 pub struct Config {
-    pub(crate) feeds: String
+    pub feeds: String,
+    pub history_file: String,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Config {
-            feeds: "fixerss.toml".to_string()
+            feeds: "fixerss.toml".to_string(),
+            history_file: ":memory:".to_string(),
         }
     }
 }

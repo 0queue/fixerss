@@ -24,11 +24,14 @@ pub enum LaunchError {
     Io(String, std::io::Error),
     #[error("failed to parse feed configuration")]
     FixerssConfig(#[from] toml::de::Error),
+    #[error("failed to open connection to sqlite")]
+    SqlxError(#[from] sqlx::Error)
 }
 
-pub fn fixerss_rocket(
+pub async fn fixerss_rocket(
     port: Option<u16>,
     feeds: Option<&str>,
+    pool: Option<sqlx::SqlitePool>,
 ) -> Result<rocket::Rocket, LaunchError> {
 
     // todo turn the fixerss feed-spec into a cache structure
@@ -49,11 +52,21 @@ pub fn fixerss_rocket(
 
     let config = figment.extract::<Config>()?;
 
+    let pool = match pool {
+        Some(p) => p,
+        None => sqlx::sqlite::SqlitePoolOptions::new()
+            .connect(&format!("sqlite:{}", &config.history_file))
+            .await?
+    };
+
+    dbg!(&config.feeds);
+
     // maybe call this something like "channel/feed spec"
     let fixerss_config: feed_spec::FixerssConfig = toml::from_str(&std::fs::read_to_string(&config.feeds)
         .map_err(|e| LaunchError::Io(config.feeds.to_string(), e))?)?;
 
     Ok(rocket::custom(figment)
         .mount("/", routes![health_check])
-        .manage(fixerss_config))
+        .manage(fixerss_config)
+        .manage(pool))
 }
