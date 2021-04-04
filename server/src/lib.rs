@@ -1,16 +1,11 @@
 use rocket::figment::Profile;
 use rocket::figment::providers::Env;
-use rocket::http::Status;
 use rocket::routes;
 
 pub use server_config::ServerConfig;
 
 mod server_config;
-
-#[rocket::get("/health_check")]
-async fn health_check() -> Status {
-    Status::Ok
-}
+mod routes;
 
 #[derive(thiserror::Error, Debug)]
 pub enum BuildError {
@@ -71,7 +66,7 @@ pub fn build_rocket(
     settings: settings::FixerssSettings,
 ) -> rocket::Rocket {
     rocket::custom(figment)
-        .mount("/", routes![health_check])
+        .mount("/", routes![routes::health_check, routes::rss_xml])
         .manage(settings)
         .manage(pool)
 }
