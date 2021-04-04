@@ -1,4 +1,4 @@
-#[derive(serde_derive::Deserialize, Debug)]
+#[derive(serde_derive::Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum SelectorOrText {
     Selector {
@@ -54,7 +54,7 @@ impl SelectorOrText {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SelectorWrapper(scraper::Selector);
 
 impl std::ops::Deref for SelectorWrapper {

@@ -15,7 +15,7 @@ impl std::ops::Deref for FixerssSettings {
     }
 }
 
-#[derive(serde_derive::Deserialize, Debug)]
+#[derive(serde_derive::Deserialize, Debug, Clone)]
 pub struct FeedSettings {
     pub stale_after: duration::DurationSettings,
     pub user_agent: Option<String>,
@@ -23,14 +23,14 @@ pub struct FeedSettings {
     pub item: ItemSettings,
 }
 
-#[derive(serde_derive::Deserialize, Debug)]
+#[derive(serde_derive::Deserialize, Debug, Clone)]
 pub struct ChannelSettings {
     pub title: String,
     pub link: String,
     pub description: String,
 }
 
-#[derive(serde_derive::Deserialize, Debug)]
+#[derive(serde_derive::Deserialize, Debug, Clone)]
 pub struct ItemSettings {
     pub title: selector::SelectorOrText,
     pub description: selector::SelectorOrText,

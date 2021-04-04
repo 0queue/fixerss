@@ -6,6 +6,7 @@ pub use server_config::ServerConfig;
 
 mod server_config;
 mod routes;
+mod settings_guard;
 
 #[derive(thiserror::Error, Debug)]
 pub enum BuildError {

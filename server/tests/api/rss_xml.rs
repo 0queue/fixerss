@@ -25,3 +25,16 @@ async fn get_rss_xml_of_known_feed_returns_xml() {
 
     assert_eq!(content_type, rocket::http::ContentType::XML)
 }
+
+#[rocket::async_test]
+async fn get_rss_xml_of_unknown_feed_returns_404() {
+    let test_app = spawn_app().await;
+
+    let response = test_app.client
+        .get(test_app.endpoint("/notfound/rss.xml"))
+        .send()
+        .await
+        .expect("Failed to get rss.xml");
+
+    assert_eq!(response.status().as_u16(), rocket::http::Status::NotFound.code)
+}

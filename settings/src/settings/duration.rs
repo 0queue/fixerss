@@ -1,4 +1,4 @@
-#[derive(serde_derive::Deserialize, Debug)]
+#[derive(serde_derive::Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum DurationSettings {
     Days { days: u32 },
