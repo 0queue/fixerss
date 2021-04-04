@@ -25,7 +25,9 @@ pub enum LaunchError {
     #[error("failed to parse feed configuration")]
     FixerssConfig(#[from] toml::de::Error),
     #[error("failed to open connection to sqlite")]
-    SqlxError(#[from] sqlx::Error)
+    SqlxError(#[from] sqlx::Error),
+    #[error("failed to run migrations")]
+    MigrateError(#[from] sqlx::migrate::MigrateError)
 }
 
 pub async fn fixerss_rocket(
@@ -34,7 +36,11 @@ pub async fn fixerss_rocket(
     pool: Option<sqlx::SqlitePool>,
 ) -> Result<rocket::Rocket, LaunchError> {
 
-    // todo turn the fixerss feed-spec into a cache structure
+    // TODO rename feed-spec to settings, fixerss to server, and config-runner to oneshot
+    //      and this to build_rocket
+
+    // not super happy with this, need to break out figment probably, and allow it to be overridden by
+    // test code instead of all those Option arguments
 
     // feed-spec structure:
     //   - our default plus rocket defaults,
@@ -52,12 +58,17 @@ pub async fn fixerss_rocket(
 
     let config = figment.extract::<Config>()?;
 
+    // not super happy with this, should be a separate function after loading config
     let pool = match pool {
         Some(p) => p,
         None => sqlx::sqlite::SqlitePoolOptions::new()
             .connect(&format!("sqlite:{}", &config.history_file))
             .await?
     };
+
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await?;
 
     dbg!(&config.feeds);
 
