@@ -1,15 +1,13 @@
 [package]
-name = "fixerss"
+name = "server"
 version = "0.1.0"
 authors = ["Thomas Harris <teh019283@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 rocket = { git = "https://github.com/SergioBenitez/Rocket", rev = "3045e0a" }
 serde = "1.0.125"
-feed-spec = { path = "../feed-spec" }
+settings = { path = "../settings" }
 toml = "0.5.8"
 thiserror = "1.0.24"
 sqlx = { version = "0.5.1", features = ["runtime-tokio-rustls", "sqlite", "migrate"] }

@@ -31,7 +31,7 @@ pub async fn spawn_app() -> TestApp {
     // so use a oneshot channel to block on receiving that config
     let (tx, rx) = tokio::sync::oneshot::channel::<rocket::Config>();
     let _ = tokio::spawn(async move {
-        fixerss::fixerss_rocket(Some(0), Some("../fixerss.toml"), Some(pool_clone))
+        server::build_rocket(Some(0), Some("../fixerss.toml"), Some(pool_clone))
             .await
             .unwrap()
             .attach(rocket::fairing::AdHoc::on_launch("port listener", |r| {

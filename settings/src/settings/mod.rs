@@ -2,13 +2,13 @@ mod duration;
 mod selector;
 
 #[derive(serde_derive::Deserialize, Debug)]
-pub struct FixerssConfig {
+pub struct FixerssSettings {
     #[serde(flatten)]
-    inner: std::collections::HashMap<String, RssConfig>,
+    inner: std::collections::HashMap<String, FeedSettings>,
 }
 
-impl std::ops::Deref for FixerssConfig {
-    type Target = std::collections::HashMap<String, RssConfig>;
+impl std::ops::Deref for FixerssSettings {
+    type Target = std::collections::HashMap<String, FeedSettings>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -16,22 +16,22 @@ impl std::ops::Deref for FixerssConfig {
 }
 
 #[derive(serde_derive::Deserialize, Debug)]
-pub struct RssConfig {
-    pub stale_after: duration::DurationConfig,
+pub struct FeedSettings {
+    pub stale_after: duration::DurationSettings,
     pub user_agent: Option<String>,
-    pub channel: ChannelConfig,
-    pub item: ItemConfig,
+    pub channel: ChannelSettings,
+    pub item: ItemSettings,
 }
 
 #[derive(serde_derive::Deserialize, Debug)]
-pub struct ChannelConfig {
+pub struct ChannelSettings {
     pub title: String,
     pub link: String,
     pub description: String,
 }
 
 #[derive(serde_derive::Deserialize, Debug)]
-pub struct ItemConfig {
+pub struct ItemSettings {
     pub title: selector::SelectorOrText,
     pub description: selector::SelectorOrText,
     pub guid: Option<String>, // todo parseable, isPermalink, etc

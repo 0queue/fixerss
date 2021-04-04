@@ -1,24 +1,22 @@
 use rocket::figment::value::Dict;
 use rocket::figment::value::Map;
 
-// too many things named feed-spec flying about
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
-pub struct Config {
-    pub feeds: String,
+pub struct ServerConfig {
+    pub settings_file: String,
     pub history_file: String,
 }
 
-impl Default for Config {
+impl Default for ServerConfig {
     fn default() -> Self {
-        Config {
-            feeds: "fixerss.toml".to_string(),
+        ServerConfig {
+            settings_file: "fixerss.toml".to_string(),
             history_file: ":memory:".to_string(),
         }
     }
 }
 
-// not sure how to read this (and only this?) from FIXERSS_FEEDS
-impl rocket::figment::Provider for Config {
+impl rocket::figment::Provider for ServerConfig {
     fn metadata(&self) -> rocket::figment::Metadata {
         rocket::figment::Metadata::named("fixerss")
     }

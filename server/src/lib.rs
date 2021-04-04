@@ -2,7 +2,7 @@ use rocket::http::Status;
 use rocket::routes;
 
 use option_config::OptionConfig;
-use server_config::Config;
+use server_config::ServerConfig;
 use rocket::figment::Profile;
 use rocket::figment::providers::Env;
 
@@ -30,33 +30,30 @@ pub enum LaunchError {
     MigrateError(#[from] sqlx::migrate::MigrateError)
 }
 
-pub async fn fixerss_rocket(
+pub async fn build_rocket(
     port: Option<u16>,
     feeds: Option<&str>,
     pool: Option<sqlx::SqlitePool>,
 ) -> Result<rocket::Rocket, LaunchError> {
 
-    // TODO rename feed-spec to settings, fixerss to server, and config-runner to oneshot
-    //      and this to build_rocket
-
     // not super happy with this, need to break out figment probably, and allow it to be overridden by
     // test code instead of all those Option arguments
 
-    // feed-spec structure:
+    // settings structure:
     //   - our default plus rocket defaults,
     //   - allow profile selection at run time
     //   - allow overriding with env vars (no toml)
     //   - override programmatically if told to
     let figment = rocket::figment::Figment::new()
-        .merge(Config::default())
+        .merge(ServerConfig::default())
         .merge(rocket::Config::default())
         .select(Profile::from_env_or("FIXERSS_PROFILE", rocket::Config::DEFAULT_PROFILE))
         .merge(Env::prefixed("FIXERSS_").ignore(&["PROFILE"]).global())
-        // always prio the programmatic feed-spec, which does not have to exist
+        // always prio the programmatic settings, which does not have to exist
         .merge(OptionConfig("port", port))
-        .merge(OptionConfig("feeds", feeds));
+        .merge(OptionConfig("settings_file", feeds));
 
-    let config = figment.extract::<Config>()?;
+    let config = figment.extract::<ServerConfig>()?;
 
     // not super happy with this, should be a separate function after loading config
     let pool = match pool {
@@ -70,11 +67,10 @@ pub async fn fixerss_rocket(
         .run(&pool)
         .await?;
 
-    dbg!(&config.feeds);
+    dbg!(&config.settings_file);
 
-    // maybe call this something like "channel/feed spec"
-    let fixerss_config: feed_spec::FixerssConfig = toml::from_str(&std::fs::read_to_string(&config.feeds)
-        .map_err(|e| LaunchError::Io(config.feeds.to_string(), e))?)?;
+    let fixerss_config: settings::FixerssSettings = toml::from_str(&std::fs::read_to_string(&config.settings_file)
+        .map_err(|e| LaunchError::Io(config.settings_file.to_string(), e))?)?;
 
     Ok(rocket::custom(figment)
         .mount("/", routes![health_check])

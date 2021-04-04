@@ -16,12 +16,12 @@ Then, when using the SQLx CLI, make sure to execute commands from the project
 root while pointing towards the sub project's sources. Example:
 
 ```
-$ cargo sqlx migrate --source fixerss/migrations info
+$ cargo sqlx migrate --source server/migrations info
 ```
 
 ## Binaries
 
-- `fixerss`: The server that reads a config, serves generated rss files,
-             and periodically scrapes the configured websites
-- `config-runner`: Scrapes the given config and outputs the generated rss.
-                   Useful for debugging css selectors.
+- `server`: The server that reads a config, serves generated rss files,
+            and periodically scrapes the configured websites
+- `oneshot`: Scrapes the given config and outputs the generated rss once.
+             Useful for debugging css selectors.

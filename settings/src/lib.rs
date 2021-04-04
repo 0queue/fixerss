@@ -1,15 +1,15 @@
 use anyhow::Context;
 
-pub use config::ChannelConfig;
-pub use config::FixerssConfig;
-pub use config::ItemConfig;
-pub use config::RssConfig;
+pub use crate::settings::FixerssSettings;
+pub use crate::settings::FeedSettings;
+pub use crate::settings::ChannelSettings;
+pub use crate::settings::ItemSettings;
 
-mod config;
+mod settings;
 
 pub fn to_rss_item(
     page: &str,
-    item_config: &config::ItemConfig,
+    item_config: &settings::ItemSettings,
 ) -> Result<rss::Item, anyhow::Error> {
     let html = scraper::Html::parse_document(page);
 

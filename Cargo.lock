@@ -232,17 +232,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fff857943da45f546682664a79488be82e69e43c1a7a2307679ab9afb3a66d2e"
 
 [[package]]
-name = "config-runner"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "argh",
- "feed-spec",
- "toml",
- "ureq",
-]
-
-[[package]]
 name = "const_fn"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -507,18 +496,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "feed-spec"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "rss",
- "scraper",
- "serde",
- "serde_derive",
-]
-
-[[package]]
 name = "figment"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -530,22 +507,6 @@ dependencies = [
  "toml",
  "uncased",
  "version_check",
-]
-
-[[package]]
-name = "fixerss"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "feed-spec",
- "futures",
- "reqwest",
- "rocket",
- "serde",
- "sqlx",
- "thiserror",
- "tokio",
- "toml",
 ]
 
 [[package]]
@@ -1161,6 +1122,17 @@ name = "once_cell"
 version = "1.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af8b08b04175473088b46763e51ee54da5f9a164bc162f615b91bc179dbf15a3"
+
+[[package]]
+name = "oneshot"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "argh",
+ "settings",
+ "toml",
+ "ureq",
+]
 
 [[package]]
 name = "opaque-debug"
@@ -1813,6 +1785,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "futures",
+ "reqwest",
+ "rocket",
+ "serde",
+ "settings",
+ "sqlx",
+ "thiserror",
+ "tokio",
+ "toml",
+]
+
+[[package]]
 name = "servo_arc"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1820,6 +1808,18 @@ checksum = "d98238b800e0d1576d8b6e3de32827c2d74bee68bb97748dcf5071fb53965432"
 dependencies = [
  "nodrop",
  "stable_deref_trait",
+]
+
+[[package]]
+name = "settings"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "rss",
+ "scraper",
+ "serde",
+ "serde_derive",
 ]
 
 [[package]]
