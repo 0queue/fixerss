@@ -1,12 +1,10 @@
+use rocket::figment::Profile;
+use rocket::figment::providers::Env;
 use rocket::http::Status;
 use rocket::routes;
 
-use option_config::OptionConfig;
-use server_config::ServerConfig;
-use rocket::figment::Profile;
-use rocket::figment::providers::Env;
+pub use server_config::ServerConfig;
 
-mod option_config;
 mod server_config;
 
 #[rocket::get("/health_check")]
@@ -15,65 +13,65 @@ async fn health_check() -> Status {
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum LaunchError {
+pub enum BuildError {
     #[error("failed to launch rocket")]
     Rocket(#[from] rocket::error::Error),
-    #[error("failed to load configuration")]
-    Figment(#[from] rocket::figment::Error),
-    #[error("failed to read file")]
-    Io(String, std::io::Error),
-    #[error("failed to parse feed configuration")]
-    FixerssConfig(#[from] toml::de::Error),
     #[error("failed to open connection to sqlite")]
     SqlxError(#[from] sqlx::Error),
     #[error("failed to run migrations")]
-    MigrateError(#[from] sqlx::migrate::MigrateError)
+    MigrateError(#[from] sqlx::migrate::MigrateError),
 }
 
-pub async fn build_rocket(
-    port: Option<u16>,
-    feeds: Option<&str>,
-    pool: Option<sqlx::SqlitePool>,
-) -> Result<rocket::Rocket, LaunchError> {
+#[derive(thiserror::Error, Debug)]
+pub enum SettingsError {
+    #[error("failed to load configuration")]
+    Figment(#[from] rocket::figment::Error),
+    #[error("failed to read settings file")]
+    Io(String, std::io::Error),
+    #[error("failed to parse feed configuration")]
+    FixerssConfig(#[from] toml::de::Error),
+}
 
-    // not super happy with this, need to break out figment probably, and allow it to be overridden by
-    // test code instead of all those Option arguments
-
+pub fn build_figment() -> rocket::figment::Figment {
     // settings structure:
     //   - our default plus rocket defaults,
     //   - allow profile selection at run time
     //   - allow overriding with env vars (no toml)
-    //   - override programmatically if told to
-    let figment = rocket::figment::Figment::new()
+    //   - override programmatically outside of this function with .merge((k, v))
+    rocket::figment::Figment::new()
         .merge(ServerConfig::default())
         .merge(rocket::Config::default())
         .select(Profile::from_env_or("FIXERSS_PROFILE", rocket::Config::DEFAULT_PROFILE))
         .merge(Env::prefixed("FIXERSS_").ignore(&["PROFILE"]).global())
-        // always prio the programmatic settings, which does not have to exist
-        .merge(OptionConfig("port", port))
-        .merge(OptionConfig("settings_file", feeds));
+}
 
-    let config = figment.extract::<ServerConfig>()?;
-
-    // not super happy with this, should be a separate function after loading config
-    let pool = match pool {
-        Some(p) => p,
-        None => sqlx::sqlite::SqlitePoolOptions::new()
-            .connect(&format!("sqlite:{}", &config.history_file))
-            .await?
-    };
+pub async fn build_pool(filename: &str) -> Result<sqlx::SqlitePool, sqlx::Error> {
+    let pool = sqlx::sqlite::SqlitePoolOptions::new()
+        .connect(&format!("sqlite:{}", filename))
+        .await?;
 
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await?;
 
-    dbg!(&config.settings_file);
+    Ok(pool)
+}
 
-    let fixerss_config: settings::FixerssSettings = toml::from_str(&std::fs::read_to_string(&config.settings_file)
-        .map_err(|e| LaunchError::Io(config.settings_file.to_string(), e))?)?;
+pub async fn build_settings(server_config: &ServerConfig) -> Result<settings::FixerssSettings, SettingsError> {
+    let settings_contents = tokio::fs::read_to_string(&server_config.settings_file)
+        .await
+        .map_err(|e| SettingsError::Io(server_config.settings_file.to_string(), e))?;
 
-    Ok(rocket::custom(figment)
+    Ok(toml::from_str(&settings_contents)?)
+}
+
+pub fn build_rocket(
+    figment: rocket::figment::Figment,
+    pool: sqlx::SqlitePool,
+    settings: settings::FixerssSettings,
+) -> rocket::Rocket {
+    rocket::custom(figment)
         .mount("/", routes![health_check])
-        .manage(fixerss_config)
-        .manage(pool))
+        .manage(settings)
+        .manage(pool)
 }
