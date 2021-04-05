@@ -1,8 +1,9 @@
 use rocket::http::ContentType;
 use rocket::http::Status;
+use rocket::response::Content;
 
 use crate::settings_guard::SettingsGuard;
-use rocket::response::Content;
+use crate::use_case;
 
 #[rocket::get("/health_check")]
 pub async fn health_check() -> Status {
@@ -10,14 +11,26 @@ pub async fn health_check() -> Status {
 }
 
 #[rocket::get("/<_feed_name>/rss.xml")]
-pub async fn rss_xml(_feed_name: String, feed_settings: SettingsGuard) -> Content<String> {
+pub async fn rss_xml(
+    _feed_name: String,
+    feed_settings: SettingsGuard,
+    pool: rocket::State<'_, sqlx::SqlitePool>,
+) -> Result<Content<String>, Status> {
     let channel = {
+        let items = use_case::load_items(&feed_settings, &pool).await
+            .map_err(|e| {
+                rocket::warn!("Failed to load items: {:?}", e);
+                Status::InternalServerError
+            })?;
+
+        // the builder doesn't work with intellij, rip
         let mut channel = rss::Channel::default();
-        channel.title = feed_settings.channel.title.clone();
-        channel.description = feed_settings.channel.description.clone();
-        channel.link = feed_settings.channel.link.clone();
+        channel.set_title(feed_settings.channel.title.clone());
+        channel.set_description(feed_settings.channel.description.clone());
+        channel.set_link(feed_settings.channel.link.clone());
+        channel.set_items(items);
         channel
     };
 
-    Content(ContentType::XML, channel.to_string())
+    Ok(Content(ContentType::XML, channel.to_string()))
 }

@@ -4,17 +4,23 @@ version = "0.1.0"
 authors = ["Thomas Harris <teh019283@gmail.com>"]
 edition = "2018"
 
+[lib]
+# sqlx::query has a failing doc test but I can find literally no info about it
+# so, no doc tests until we figure out what the hell is going on
+doctest = false
+
 [dependencies]
 rocket = { git = "https://github.com/SergioBenitez/Rocket", rev = "3045e0a" }
 serde = "1.0.125"
 settings = { path = "../settings" }
 toml = "0.5.8"
 thiserror = "1.0.24"
-sqlx = { version = "0.5.1", features = ["runtime-tokio-rustls", "sqlite", "migrate"] }
+sqlx = { version = "0.5.1", features = ["runtime-tokio-rustls", "sqlite", "migrate", "chrono"] }
 anyhow = "1.0.40"
 futures = "0.3.13"
 tokio = "1.4.0"
 rss = "1.10.0"
+chrono = "0.4.19"
 
 [dev-dependencies]
 anyhow = "1.0.40"

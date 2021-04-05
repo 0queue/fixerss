@@ -1,4 +1,0 @@
-CREATE TABLE experiment (
-    id INTEGER PRIMARY KEY NOT NULL,
-    v VARCHAR NOT NULL
-);
