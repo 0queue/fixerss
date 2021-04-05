@@ -2,12 +2,14 @@ use rocket::figment::Profile;
 use rocket::figment::providers::Env;
 use rocket::routes;
 
+pub use refresher::start_refresher;
 pub use server_config::ServerConfig;
 
 mod server_config;
 mod routes;
 mod settings_guard;
-mod use_case;
+pub mod use_case;
+mod refresher;
 
 #[derive(thiserror::Error, Debug)]
 pub enum BuildError {
@@ -43,6 +45,12 @@ pub fn build_figment() -> rocket::figment::Figment {
 }
 
 pub async fn build_pool(filename: &str) -> Result<sqlx::SqlitePool, sqlx::Error> {
+
+    if filename != ":memory:" && tokio::fs::metadata(filename).await.is_err() {
+        // ignore errors, sqlite will learn about any soon enough
+        let _ = tokio::fs::File::create(filename).await;
+    }
+
     let pool = sqlx::sqlite::SqlitePoolOptions::new()
         .connect(&format!("sqlite:{}", filename))
         .await?;

@@ -7,6 +7,7 @@ pub use crate::settings::ItemSettings;
 
 mod settings;
 
+// TODO needs some work...
 pub fn to_rss_item(
     page: &str,
     item_config: &settings::ItemSettings,

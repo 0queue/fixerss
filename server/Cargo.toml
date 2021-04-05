@@ -21,8 +21,10 @@ futures = "0.3.13"
 tokio = "1.4.0"
 rss = "1.10.0"
 chrono = "0.4.19"
+rand = "0.8.3"
+reqwest = { version = "0.11.2", default_features = false, features = ["rustls-tls"] }
+uuid = { version = "0.8.2", features = ["v4"] }
 
 [dev-dependencies]
 anyhow = "1.0.40"
-reqwest = { version = "0.11.2", default_features = false, features = ["rustls"] }
 tokio = "1.4.0"
