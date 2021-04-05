@@ -14,6 +14,7 @@ sqlx = { version = "0.5.1", features = ["runtime-tokio-rustls", "sqlite", "migra
 anyhow = "1.0.40"
 futures = "0.3.13"
 tokio = "1.4.0"
+rss = "1.10.0"
 
 [dev-dependencies]
 anyhow = "1.0.40"

@@ -1792,6 +1792,7 @@ dependencies = [
  "futures",
  "reqwest",
  "rocket",
+ "rss",
  "serde",
  "settings",
  "sqlx",

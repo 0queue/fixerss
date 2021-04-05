@@ -23,7 +23,10 @@ async fn get_rss_xml_of_known_feed_returns_xml() {
             .unwrap()
     };
 
-    assert_eq!(content_type, rocket::http::ContentType::XML)
+    assert_eq!(content_type, rocket::http::ContentType::XML);
+
+    let channel = rss::Channel::from_str(&response.text().await.unwrap());
+    assert!(channel.is_ok());
 }
 
 #[rocket::async_test]
