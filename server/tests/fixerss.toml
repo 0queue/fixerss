@@ -1,0 +1,7 @@
+[xkcd]
+stale_after = { days = 1 }
+channel.title = "xkcd.com"
+channel.link = "https://xkcd.com"
+channel.description = "xkcd.com: A webcomic of romance and math humor."
+item.title = { css = "div#ctitle", inner_html = true }
+item.description = { css = "div#comic img" }

@@ -23,7 +23,7 @@ pub async fn spawn_app() -> TestApp {
     // build the dependencies similar to the normal main but without error handling and with overrides
     let figment = server::build_figment()
         .merge(("port", 0))
-        .merge(("settings_file", "../fixerss.toml"))
+        .merge(("settings_file", "./tests/fixerss.toml"))
         .merge(("history_file", ":memory:"));
     let server_config = figment.extract::<server::ServerConfig>().unwrap();
     let pool = server::build_pool(&server_config.history_file).await.unwrap();
