@@ -70,6 +70,29 @@ async fn get_rss_xml_of_feed_with_one_item_returns_one_item() {
 }
 
 #[rocket::async_test]
+async fn get_rss_xml_of_feed_with_four_items_returns_three_items() {
+    let test_app = spawn_app().await;
+
+    let now = chrono::Utc::now();
+
+    crate::helpers::insert_item(&test_app.pool, now).await;
+    crate::helpers::insert_item(&test_app.pool, now).await;
+    crate::helpers::insert_item(&test_app.pool, now).await;
+    crate::helpers::insert_item(&test_app.pool, now).await;
+
+    let response = test_app.client
+        .get(test_app.endpoint("/xkcd/rss.xml"))
+        .send()
+        .await
+        .unwrap();
+
+    let channel = rss::Channel::from_str(&response.text().await.unwrap())
+        .unwrap();
+
+    assert_eq!(channel.items.len(), 3);
+}
+
+#[rocket::async_test]
 async fn get_rss_xml_of_unknown_feed_returns_404() {
     let test_app = spawn_app().await;
 
