@@ -17,15 +17,18 @@ pub enum SelectorOrText {
     },
 }
 
+#[derive(thiserror::Error, Debug)]
+#[error("No matches for {:?}", .0)]
+pub struct SelectError(scraper::Selector);
+
 impl SelectorOrText {
-    pub fn select(&self, html: &scraper::Html) -> Result<String, anyhow::Error> {
+    pub fn select(&self, html: &scraper::Html) -> Result<String, SelectError> {
         let res = match self {
             SelectorOrText::Selector { css, inner_html } => {
                 let e = html
                     .select(&css)
                     .next()
-                    .ok_or(anyhow::anyhow!("No matches for {:?}", &css.selectors))?;
-
+                    .ok_or_else(|| SelectError(css.clone().0))?;
                 if *inner_html {
                     e.inner_html()
                 } else {

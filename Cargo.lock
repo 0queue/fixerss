@@ -2000,12 +2000,12 @@ dependencies = [
 name = "settings"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "chrono",
  "rss",
  "scraper",
  "serde",
  "serde_derive",
+ "thiserror",
 ]
 
 [[package]]

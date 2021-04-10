@@ -1,3 +1,5 @@
+pub use selector::SelectError;
+
 mod duration;
 mod selector;
 

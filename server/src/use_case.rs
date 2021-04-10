@@ -33,8 +33,8 @@ pub async fn load_items(
 pub enum RefreshFeedError {
     #[error("failed to fetch page")]
     Reqwest(#[from] reqwest::Error),
-    #[error("failed to convert page to rss item")]
-    RssConversion(#[from] anyhow::Error),
+    #[error("failed to convert page to rss item: {:?}", .0)]
+    RssConversion(#[from] settings::SelectError),
     #[error("rss item conversion missing items")]
     MisshapedRssItem(&'static str),
     #[error("failed to save rss item to database")]
