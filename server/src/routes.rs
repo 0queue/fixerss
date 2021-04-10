@@ -10,6 +10,11 @@ pub async fn health_check() -> Status {
     Status::Ok
 }
 
+#[rocket::get("/")]
+pub async fn list_feeds() -> Status {
+    Status::Ok
+}
+
 #[rocket::get("/<_feed_name>/rss.xml")]
 pub async fn rss_xml(
     _feed_name: String,

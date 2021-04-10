@@ -76,7 +76,7 @@ pub fn build_rocket(
     settings: settings::FixerssSettings,
 ) -> rocket::Rocket {
     rocket::custom(figment)
-        .mount("/", routes![routes::health_check, routes::rss_xml])
+        .mount("/", routes![routes::health_check, routes::rss_xml, routes::list_feeds])
         .manage(settings)
         .manage(pool)
 }
