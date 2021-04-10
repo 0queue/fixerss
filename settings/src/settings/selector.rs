@@ -50,7 +50,7 @@ impl SelectorOrText {
                         e.html()
                     }
                 })
-                .unwrap_or(text.clone()),
+                .unwrap_or_else(|| text.clone()),
         };
 
         Ok(res)

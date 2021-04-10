@@ -4,7 +4,7 @@ use wiremock::matchers::path;
 use wiremock::ResponseTemplate;
 
 #[rocket::async_test]
-async fn successful_refresh() {
+async fn successful_refresh_from_empty() {
     let client = reqwest::Client::new();
     let pool = server::build_pool(":memory:").await.unwrap();
 
@@ -47,3 +47,5 @@ async fn successful_refresh() {
     assert_eq!(&items[0].as_ref().unwrap().title, "This is a website");
     assert_eq!(&items[0].as_ref().unwrap().description, "<p>And this is content</p>");
 }
+
+// TODO test refresh with one entry

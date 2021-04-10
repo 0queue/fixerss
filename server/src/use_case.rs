@@ -1,4 +1,5 @@
 use futures::stream::TryStreamExt;
+
 use crate::use_case::RefreshFeedError::MisshapedRssItem;
 
 pub async fn load_items(
@@ -58,9 +59,11 @@ pub async fn refresh_feed(
     let new_item = settings::to_rss_item(&page, &feed_settings.item)?;
 
     // use title to check for uniqueness
-    let should_insert = if let Some(last_item) = load_items(feed_settings, pool).await?.first() {
-        last_item.title != new_item.title
-    } else { true };
+    let should_insert = match load_items(feed_settings, pool).await?.first() {
+        Some(last_item) if last_item.title != new_item.title => true,
+        None => true,
+        _ => false,
+    };
 
     if should_insert {
         // unwrap here??

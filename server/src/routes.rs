@@ -15,7 +15,7 @@ pub async fn health_check() -> Status {
 pub async fn list_feeds(
     fixerss_settings: rocket::State<'_, settings::FixerssSettings>
 ) -> Json<Vec<String>> {
-    Json(fixerss_settings.keys().map(|k| k.clone()).collect())
+    Json(fixerss_settings.keys().cloned().collect())
 }
 
 #[rocket::get("/<_feed_name>/rss.xml")]
