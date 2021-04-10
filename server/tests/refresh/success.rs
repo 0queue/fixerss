@@ -1,8 +1,7 @@
+use futures::stream::StreamExt;
 use wiremock::matchers::method;
 use wiremock::matchers::path;
 use wiremock::ResponseTemplate;
-
-// TODO test unsuccessful refresh (missing selectors, 404, etc)
 
 #[rocket::async_test]
 async fn successful_refresh() {
@@ -39,7 +38,6 @@ async fn successful_refresh() {
 
     assert_eq!(res.unwrap(), ());
 
-    use futures::stream::StreamExt;
     let items: Vec<_> = sqlx::query!("SELECT * FROM items").fetch(&pool)
         .collect::<Vec<Result<_, _>>>()
         .await;
