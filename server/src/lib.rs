@@ -25,7 +25,7 @@ pub enum BuildError {
 pub enum SettingsError {
     #[error("failed to load configuration")]
     Figment(#[from] rocket::figment::Error),
-    #[error("failed to read settings file")]
+    #[error("failed to read settings file {:?}: {:?}", .0, .1)]
     Io(String, std::io::Error),
     #[error("failed to parse feed configuration")]
     FixerssConfig(#[from] toml::de::Error),

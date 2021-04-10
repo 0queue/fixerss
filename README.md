@@ -25,3 +25,15 @@ $ cargo sqlx migrate --source server/migrations info
             and periodically scrapes the configured websites
 - `oneshot`: Scrapes the given config and outputs the generated rss once.
              Useful for debugging css selectors.
+  
+## Docker
+
+To build, run this in the project root:
+```shell
+docker build -t fixerss .
+```
+
+And to run with the repo's example file, from the project root:
+```shell
+docker run --rm -it -v "$(pwd)/fixerss.toml:/fixerss.toml:ro" fixerss
+```
