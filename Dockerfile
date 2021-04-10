@@ -15,5 +15,6 @@ WORKDIR /
 # until rocket supports SIGTERM I guess
 STOPSIGNAL SIGINT
 ENV FIXERSS_LOG_LEVEL=normal
+ENV FIXERSS_ADDRESS=0.0.0.0
 COPY --from=builder /usr/src/target/x86_64-unknown-linux-musl/release/server /fixerss-server
 CMD ["/fixerss-server"]
