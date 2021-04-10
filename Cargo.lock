@@ -1679,6 +1679,7 @@ dependencies = [
  "pin-project-lite",
  "rustls",
  "serde",
+ "serde_json",
  "serde_urlencoded",
  "tokio",
  "tokio-rustls",
@@ -1749,6 +1750,18 @@ dependencies = [
  "quote",
  "rocket_http",
  "unicode-xid",
+]
+
+[[package]]
+name = "rocket_contrib"
+version = "0.5.0-dev"
+source = "git+https://github.com/SergioBenitez/Rocket?rev=3045e0a#3045e0ac63fd5c4e2e543649c6871d896cbf9c0b"
+dependencies = [
+ "log",
+ "rocket",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -1961,6 +1974,7 @@ dependencies = [
  "rand 0.8.3",
  "reqwest",
  "rocket",
+ "rocket_contrib",
  "rss",
  "serde",
  "settings",

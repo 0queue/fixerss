@@ -11,6 +11,8 @@ doctest = false
 
 [dependencies]
 rocket = { git = "https://github.com/SergioBenitez/Rocket", rev = "3045e0a" }
+# magic??
+rocket_contrib = { git = "https://github.com/SergioBenitez/Rocket", rev = "3045e0a" }
 serde = "1.0.125"
 settings = { path = "../settings" }
 toml = "0.5.8"
@@ -29,3 +31,4 @@ uuid = { version = "0.8.2", features = ["v4"] }
 anyhow = "1.0.40"
 tokio = "1.4.0"
 wiremock = "0.5.2"
+reqwest = { version = "0.11.2", default_features = false, features = ["rustls-tls", "json"] }

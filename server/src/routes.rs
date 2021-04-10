@@ -1,6 +1,7 @@
 use rocket::http::ContentType;
 use rocket::http::Status;
 use rocket::response::Content;
+use rocket_contrib::json::Json;
 
 use crate::settings_guard::SettingsGuard;
 use crate::use_case;
@@ -11,8 +12,10 @@ pub async fn health_check() -> Status {
 }
 
 #[rocket::get("/")]
-pub async fn list_feeds() -> Status {
-    Status::Ok
+pub async fn list_feeds(
+    fixerss_settings: rocket::State<'_, settings::FixerssSettings>
+) -> Json<Vec<String>> {
+    Json(fixerss_settings.keys().map(|k| k.clone()).collect())
 }
 
 #[rocket::get("/<_feed_name>/rss.xml")]

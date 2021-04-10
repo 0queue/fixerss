@@ -12,7 +12,7 @@ async fn getting_index_returns_list_of_feeds() {
 
     assert!(response.status().is_success());
 
-    // response.json()
+    let feeds = response.json::<Vec<String>>().await.unwrap();
 
-    assert_eq!(response.content_length(), Some(0));
+    assert_eq!(feeds, vec!["xkcd"]);
 }
