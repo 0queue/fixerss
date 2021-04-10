@@ -1,7 +1,11 @@
 use futures::stream::TryStreamExt;
+use crate::use_case::RefreshFeedError::MisshapedRssItem;
 
-pub async fn load_items(feed_settings: &settings::FeedSettings, pool: &sqlx::SqlitePool) -> Result<Vec<rss::Item>, sqlx::Error> {
-    type DT = chrono::DateTime<chrono::Utc>;
+pub async fn load_items(
+    feed_settings: &settings::FeedSettings,
+    pool: &sqlx::SqlitePool,
+) -> Result<Vec<rss::Item>, sqlx::Error> {
+    type Dt = chrono::DateTime<chrono::Utc>;
     let items = sqlx::query!(r#"
         SELECT
             id,
@@ -9,7 +13,7 @@ pub async fn load_items(feed_settings: &settings::FeedSettings, pool: &sqlx::Sql
             title,
             description,
             guid,
-            pub_date AS "pub_date: DT"
+            pub_date AS "pub_date: Dt"
         FROM items ORDER BY pub_date DESC LIMIT (?)
     "#, 3).fetch(pool);
 
@@ -25,12 +29,23 @@ pub async fn load_items(feed_settings: &settings::FeedSettings, pool: &sqlx::Sql
     }).try_collect().await
 }
 
-// TODO no anyhow here, testing
+#[derive(thiserror::Error, Debug)]
+pub enum RefreshFeedError {
+    #[error("failed to fetch page")]
+    Reqwest(#[from] reqwest::Error),
+    #[error("failed to convert page to rss item")]
+    RssConversion(#[from] anyhow::Error),
+    #[error("rss item conversion missing items")]
+    MisshapedRssItem(&'static str),
+    #[error("failed to save rss item to database")]
+    Sqlx(#[from] sqlx::Error),
+}
+
 pub async fn refresh_feed(
     feed_settings: &settings::FeedSettings,
     pool: &sqlx::SqlitePool,
     client: &reqwest::Client,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), RefreshFeedError> {
     let page = {
         let mut req = client.get(&feed_settings.channel.link);
         if let Some(user_agent) = &feed_settings.user_agent {
@@ -50,13 +65,9 @@ pub async fn refresh_feed(
     if should_insert {
         // unwrap here??
         let channel_name = feed_settings.channel.title.clone();
-        let title = new_item.title.ok_or(anyhow::Error::msg("title not found"))?;
-        let description = new_item.description.ok_or(anyhow::Error::msg("description not found"))?;
-        let guid = new_item.guid.unwrap_or_else(|| {
-            let mut guid = rss::Guid::default();
-            guid.set_value(uuid::Uuid::new_v4().to_string());
-            guid
-        });
+        let title = new_item.title.ok_or(RefreshFeedError::MisshapedRssItem("title not found"))?;
+        let description = new_item.description.ok_or(MisshapedRssItem("description not found"))?;
+        let guid = new_item.guid.unwrap_or_else(|| guid(uuid::Uuid::new_v4().to_string()));
         let pub_date = chrono::Utc::now();
         sqlx::query!(r#"
             INSERT INTO items (
