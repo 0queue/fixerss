@@ -19,6 +19,8 @@ pub fn start_refresher<L, F>(name: String, base_duration: chrono::Duration, futu
           F: std::future::Future<Output=()> + Send + 'static {
     let (tx, rx) = tokio::sync::oneshot::channel();
 
+    let mut interval = tokio::time::interval(base_duration.to_std().unwrap());
+
     let join_handle = tokio::task::spawn(async move {
         let rx = rx.fuse();
         futures::pin_mut!(rx);
@@ -26,10 +28,8 @@ pub fn start_refresher<L, F>(name: String, base_duration: chrono::Duration, futu
         loop {
             future_factory().await;
 
-            // unwrap: base_duration comes from settings, which must be positive, and fuzz can only add time
-            // TODO instead, interval then fuzz?? keeps from drifting
-            let sleeper = tokio::time::sleep(base_duration.fuzz(0..10).to_std().unwrap())
-                .fuse();
+            let fuzz = std::time::Duration::from_secs(rand::thread_rng().gen_range(0..10*60));
+            let sleeper = interval.tick().then(|_| tokio::time::sleep(fuzz)).fuse();
 
             futures::pin_mut!(sleeper);
 
