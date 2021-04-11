@@ -1,7 +1,11 @@
-[xkcd]
-stale_after = { days = 1 }
-channel.title = "xkcd.com"
-channel.link = "https://xkcd.com"
-channel.description = "xkcd.com: A webcomic of romance and math humor."
-item.title = { css = "div#ctitle", inner_html = true }
-item.description = { css = "div#comic img" }
+[xkcd]                                                                  # id of the feed, used in the url: /xkcd/rss.xml.
+stale_after = { days = 1 }                                              # the interval of how often to check for new content
+# user_agent = "string"                                                 # Optional field to override the default user agent when scraping.  Some sites are picky
+channel.title = "xkcd.com"                                              # RSS channel title (display purposes)
+channel.link = "https://xkcd.com"                                       # link to scrape for new content, and also the given RSS link
+channel.description = "xkcd.com: A webcomic of romance and math humor." # RSS channel description (display purposes)
+item.title = { css = "div#ctitle", inner_html = true }                  # CSS selector to scrape the title from channel.link.
+                                                                        #   inner_html uses the content of what is selected
+                                                                        #   the table may also contain a "text" field, which is a fallback value
+                                                                        #   to use if selection fails
+item.description = { css = "div#comic img" }                            # CSS selector to scrape the content of the RSS item

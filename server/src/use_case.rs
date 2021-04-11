@@ -47,6 +47,7 @@ pub async fn refresh_feed(
     pool: &sqlx::SqlitePool,
     client: &reqwest::Client,
 ) -> Result<(), RefreshFeedError> {
+    rocket::info!("fetching {}", feed_settings.channel.link);
     let page = {
         let mut req = client.get(&feed_settings.channel.link);
         if let Some(user_agent) = &feed_settings.user_agent {

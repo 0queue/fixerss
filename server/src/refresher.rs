@@ -25,6 +25,9 @@ pub fn start_refresher<L, F>(name: String, base_duration: chrono::Duration, futu
         let rx = rx.fuse();
         futures::pin_mut!(rx);
 
+        // rocket hasn't started its logger yet
+        println!("Starting refresher {} with base duration {}", name, base_duration);
+
         loop {
             future_factory().await;
 
