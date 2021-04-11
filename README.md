@@ -39,16 +39,18 @@ To build, run this in the project root:
 docker build -t fixerss .
 ```
 
-And to run with the repo's example file, from the project root:
+And to run with the repo's example file with an in memory database,
+from the project root:
+
 ```shell
 docker run --rm -it -v "$(pwd)/fixerss.toml:/fixerss.toml:ro" -p 8000:8000 fixerss
 ```
 
 ## Config
 
-[The usual Rocket configuration][1], prefixed with `FIXERSS_` instead, plus:
+[The usual Rocket configuration][1], prefixed with `FIXERSS_` instead of `ROCKET_`, plus:
 
-- `FIXERSS_SETTINGS_FILE`: location of the [fixerss.toml](./fixerss.toml) file= 
+- `FIXERSS_SETTINGS_FILE`: location of the [fixerss.toml](./fixerss.toml) file. 
                            Defaults to `fixerss.toml`
 - `FIXERSS_HISTORY_FILE`: location of the SQLite database that holds generated
                           items.  Defaults to `:memory:`, which does not persist
