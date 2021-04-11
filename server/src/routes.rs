@@ -18,14 +18,14 @@ pub async fn list_feeds(
     Json(fixerss_settings.keys().cloned().collect())
 }
 
-#[rocket::get("/<_feed_name>/rss.xml")]
+#[rocket::get("/<feed_name>/rss.xml")]
 pub async fn rss_xml(
-    _feed_name: String,
+    feed_name: String,
     feed_settings: SettingsGuard,
     pool: rocket::State<'_, sqlx::SqlitePool>,
 ) -> Result<Content<String>, Status> {
     let channel = {
-        let items = use_case::load_items(&feed_settings, &pool).await
+        let items = use_case::load_items(&feed_name, &feed_settings, &pool).await
             .map_err(|e| {
                 rocket::warn!("Failed to load items: {:?}", e);
                 Status::InternalServerError

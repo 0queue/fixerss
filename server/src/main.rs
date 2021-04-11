@@ -6,16 +6,19 @@ async fn main() -> Result<(), anyhow::Error> {
     let settings = server::build_settings(&server_config).await?;
 
     // One clone to give to each refresher, and one clone of that clone to give to each future
-    let (cancellers, join_handles): (Vec<_>, Vec<_>) = settings.values().map(|feed_settings| {
+    let (cancellers, join_handles): (Vec<_>, Vec<_>) = settings.iter().map(|(feed_name, feed_settings)| {
+        let feed_name_outer = feed_name.clone();
         let feed_settings_outer = feed_settings.clone();
         let pool_clone_outer = pool.clone();
         let client_outer = reqwest::Client::new();
-        server::start_refresher(feed_settings.channel.title.clone(), feed_settings.stale_after.clone().into(), move || {
+        server::start_refresher(feed_name.clone(), feed_settings.stale_after.clone().into(), move || {
+            let feed_name_inner = feed_name_outer.clone();
             let feed_settings_inner = feed_settings_outer.clone();
             let pool_clone_inner = pool_clone_outer.clone();
             let client_inner = client_outer.clone();
             async move {
                 if let Err(e) = server::use_case::refresh_feed(
+                    &feed_name_inner,
                     &feed_settings_inner,
                     &pool_clone_inner,
                     &client_inner

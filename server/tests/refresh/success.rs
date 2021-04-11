@@ -34,7 +34,7 @@ async fn refreshing_with_no_items_results_in_one_item() {
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();
 
-    let res = server::use_case::refresh_feed(&feed_settings.get("website").unwrap(), &pool, &client).await;
+    let res = server::use_case::refresh_feed("website", &feed_settings.get("website").unwrap(), &pool, &client).await;
 
     assert_eq!(res.unwrap(), ());
 
@@ -79,7 +79,12 @@ async fn refreshing_with_item_of_same_title_results_in_no_update() {
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();
 
-    let res = server::use_case::refresh_feed(&feed_settings.get("website").unwrap(), &pool, &client).await;
+    let res = server::use_case::refresh_feed(
+        "website",
+        &feed_settings.get("website").unwrap(),
+        &pool,
+        &client,
+    ).await;
 
     assert_eq!(res.unwrap(), ());
 
@@ -93,7 +98,12 @@ async fn refreshing_with_item_of_same_title_results_in_no_update() {
     assert_eq!(&items[0].as_ref().unwrap().description, "<p>And this is content</p>");
 
     // do it again
-    let res = server::use_case::refresh_feed(&feed_settings.get("website").unwrap(), &pool, &client).await;
+    let res = server::use_case::refresh_feed(
+        "website",
+        &feed_settings.get("website").unwrap(),
+        &pool,
+        &client,
+    ).await;
 
     assert_eq!(res.unwrap(), ());
 
@@ -135,7 +145,12 @@ async fn refreshing_with_one_different_title_results_in_two_items() {
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();
 
-    let res = server::use_case::refresh_feed(&feed_settings.get("website").unwrap(), &pool, &client).await;
+    let res = server::use_case::refresh_feed(
+        "website",
+        &feed_settings.get("website").unwrap(),
+        &pool,
+        &client
+    ).await;
 
     assert_eq!(res.unwrap(), ());
 
@@ -152,7 +167,13 @@ async fn refreshing_with_one_different_title_results_in_two_items() {
     sqlx::query!(r#"UPDATE items SET title = "overridden""#).execute(&pool).await.unwrap();
 
     // second refresh
-    let res = server::use_case::refresh_feed(&feed_settings.get("website").unwrap(), &pool, &client).await;
+    let res = server::use_case::refresh_feed(
+        "website",
+        &feed_settings.get("website").unwrap(),
+        &pool,
+        &client
+    ).await;
+
     assert_eq!(res.unwrap(), ());
 
     let items: Vec<_> = sqlx::query!("SELECT * FROM items").fetch(&pool)
@@ -161,3 +182,5 @@ async fn refreshing_with_one_different_title_results_in_two_items() {
 
     assert_eq!(items.len(), 2);
 }
+
+// TODO test with multiple feeds... will be a large test

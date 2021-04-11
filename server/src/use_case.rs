@@ -3,6 +3,7 @@ use futures::stream::TryStreamExt;
 use crate::use_case::RefreshFeedError::MisshapedRssItem;
 
 pub async fn load_items(
+    feed_name: &str,
     feed_settings: &settings::FeedSettings,
     pool: &sqlx::SqlitePool,
 ) -> Result<Vec<rss::Item>, sqlx::Error> {
@@ -15,8 +16,8 @@ pub async fn load_items(
             description,
             guid,
             pub_date AS "pub_date: Dt"
-        FROM items ORDER BY pub_date DESC LIMIT (?)
-    "#, 3).fetch(pool);
+        FROM items WHERE feed_name = (?) ORDER BY pub_date DESC LIMIT (?)
+    "#, feed_name, 3).fetch(pool);
 
     items.map_ok(|i| {
         let mut item = rss::Item::default();
@@ -43,6 +44,7 @@ pub enum RefreshFeedError {
 }
 
 pub async fn refresh_feed(
+    feed_name: &str,
     feed_settings: &settings::FeedSettings,
     pool: &sqlx::SqlitePool,
     client: &reqwest::Client,
@@ -60,10 +62,19 @@ pub async fn refresh_feed(
     let new_item = settings::to_rss_item(&page, &feed_settings.item)?;
 
     // use title to check for uniqueness
-    let should_insert = match load_items(feed_settings, pool).await?.first() {
-        Some(last_item) if last_item.title != new_item.title => true,
-        None => true,
-        _ => false,
+    let should_insert = match load_items(feed_name, feed_settings, pool).await?.first() {
+        Some(last_item) if last_item.title != new_item.title => {
+            rocket::info!(r#"Title "{:?}" != "{:?}", updating"#, &last_item.title, &new_item.title);
+            true
+        }
+        None => {
+            rocket::info!("feed {} is empty", feed_name);
+            true
+        }
+        _ => {
+            rocket::info!("feed {} is up to date", feed_name);
+            false
+        }
     };
 
     if should_insert {
@@ -75,13 +86,14 @@ pub async fn refresh_feed(
         let pub_date = chrono::Utc::now();
         sqlx::query!(r#"
             INSERT INTO items (
+                feed_name,
                 channel_name,
                 title,
                 description,
                 guid,
                 pub_date
-            ) VALUES (?, ?, ?, ?, ?)
-        "#, channel_name, title, description, guid.value, pub_date)
+            ) VALUES (?, ?, ?, ?, ?, ?)
+        "#, feed_name, channel_name, title, description, guid.value, pub_date)
             .execute(pool).await?;
     }
 

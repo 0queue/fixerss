@@ -48,14 +48,19 @@ pub async fn spawn_app() -> TestApp {
     }
 }
 
-pub async fn insert_item(pool: &sqlx::SqlitePool, now: chrono::DateTime<chrono::Utc>) {
+pub async fn insert_item(
+    feed_name: &str,
+    pool: &sqlx::SqlitePool,
+    now: chrono::DateTime<chrono::Utc>,
+) {
     let _ = sqlx::query!(r#"
         INSERT INTO items (
+            feed_name,
             channel_name,
             title,
             description,
             guid,
             pub_date
-        ) VALUES (?, ?, ?, ?, ?)
-    "#, "channel name", "title", "description", "guid", now).execute(pool).await;
+        ) VALUES (?, ?, ?, ?, ?, ?)
+    "#, feed_name, "channel name", "title", "description", "guid", now).execute(pool).await;
 }

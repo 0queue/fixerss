@@ -34,7 +34,12 @@ async fn failure_to_find_title_results_in_err() {
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();
 
-    let res = server::use_case::refresh_feed(&feed_settings.get("website").unwrap(), &pool, &client).await;
+    let res = server::use_case::refresh_feed(
+        "website",
+        &feed_settings.get("website").unwrap(),
+        &pool,
+        &client,
+    ).await;
 
     assert!(matches!(res, Err(server::use_case::RefreshFeedError::RssConversion(_))));
 
@@ -70,7 +75,12 @@ async fn failure_to_fetch_webpage_results_in_err() {
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();
 
-    let res = server::use_case::refresh_feed(&feed_settings.get("website").unwrap(), &pool, &client).await;
+    let res = server::use_case::refresh_feed(
+        "website",
+        &feed_settings.get("website").unwrap(),
+        &pool,
+        &client,
+    ).await;
 
     // 404 results in an empty body
     assert!(matches!(res, Err(server::use_case::RefreshFeedError::RssConversion(_))));

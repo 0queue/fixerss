@@ -1,7 +1,9 @@
-use crate::helpers::spawn_app;
 use std::str::FromStr;
+
 use reqwest::header::CONTENT_TYPE;
 use rocket::http::ContentType;
+
+use crate::helpers::spawn_app;
 
 #[rocket::async_test]
 async fn get_rss_xml_of_known_feed_returns_200_and_correct_content_type() {
@@ -51,7 +53,7 @@ async fn get_rss_xml_of_feed_with_one_item_returns_one_item() {
 
     let now = chrono::Utc::now();
 
-    crate::helpers::insert_item(&test_app.pool, now).await;
+    crate::helpers::insert_item("xkcd", &test_app.pool, now).await;
 
     let response = test_app.client
         .get(test_app.endpoint("/xkcd/rss.xml"))
@@ -75,10 +77,10 @@ async fn get_rss_xml_of_feed_with_four_items_returns_three_items() {
 
     let now = chrono::Utc::now();
 
-    crate::helpers::insert_item(&test_app.pool, now).await;
-    crate::helpers::insert_item(&test_app.pool, now).await;
-    crate::helpers::insert_item(&test_app.pool, now).await;
-    crate::helpers::insert_item(&test_app.pool, now).await;
+    crate::helpers::insert_item("xkcd", &test_app.pool, now).await;
+    crate::helpers::insert_item("xkcd", &test_app.pool, now).await;
+    crate::helpers::insert_item("xkcd", &test_app.pool, now).await;
+    crate::helpers::insert_item("xkcd", &test_app.pool, now).await;
 
     let response = test_app.client
         .get(test_app.endpoint("/xkcd/rss.xml"))
