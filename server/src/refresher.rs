@@ -1,16 +1,6 @@
 use rand::Rng;
 use futures::future::FutureExt;
 
-trait DurationFuzzExt {
-    fn fuzz(&self, range: std::ops::Range<u32>) -> chrono::Duration;
-}
-
-impl DurationFuzzExt for chrono::Duration {
-    fn fuzz(&self, range: std::ops::Range<u32>) -> chrono::Duration {
-        *self + chrono::Duration::minutes(rand::thread_rng().gen_range(range).into())
-    }
-}
-
 // Really don't know much about send and sync, I just add them when the compiler tells
 // me too, and remove them when it seems like it's causing issues.
 // So that's why L is Send + Sync but F is only Send
