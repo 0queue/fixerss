@@ -1,5 +1,3 @@
-pub use selector::SelectError;
-
 mod duration;
 mod selector;
 
@@ -34,7 +32,7 @@ pub struct ChannelSettings {
 
 #[derive(serde_derive::Deserialize, Debug, Clone)]
 pub struct ItemSettings {
-    pub title: selector::SelectorOrText,
-    pub description: selector::SelectorOrText,
+    pub title: selector::Selector,
+    pub description: selector::Selector,
     pub guid: Option<String>, // todo parseable, isPermalink, etc
 }

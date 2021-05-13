@@ -28,8 +28,8 @@ async fn failure_to_find_title_results_in_err() {
         channel.title = "website"
         channel.link = "{}"
         channel.description = "description"
-        item.title = {{ css = "h1", inner_html = true }}
-        item.description = {{ css = "p" }}
+        item.title = {{ selector = "h1", inner_html = true }}
+        item.description = {{ selector = "p" }}
     "#, &mock_server.uri());
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();
@@ -41,7 +41,7 @@ async fn failure_to_find_title_results_in_err() {
         &client,
     ).await;
 
-    assert!(matches!(res, Err(server::use_case::RefreshFeedError::RssConversion(_))));
+    assert!(matches!(res, Err(server::use_case::RefreshFeedError::MismatchedItemSelection(_))));
 
     let items: Vec<_> = sqlx::query!("SELECT * FROM items").fetch(&pool)
         .collect::<Vec<Result<_, _>>>()
@@ -69,21 +69,20 @@ async fn failure_to_fetch_webpage_results_in_err() {
         channel.title = "website"
         channel.link = "{}"
         channel.description = "description"
-        item.title = {{ css = "h1", inner_html = true }}
-        item.description = {{ css = "p" }}
+        item.title = {{ selector = "h1", inner_html = true }}
+        item.description = {{ selector = "p" }}
     "#, &mock_server.uri());
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();
 
-    let res = server::use_case::refresh_feed(
+    let _ = server::use_case::refresh_feed(
         "website",
         &feed_settings.get("website").unwrap(),
         &pool,
         &client,
     ).await;
 
-    // 404 results in an empty body
-    assert!(matches!(res, Err(server::use_case::RefreshFeedError::RssConversion(_))));
+    // 404 results in an empty body, which is a warning, not an error
 
     let items: Vec<_> = sqlx::query!("SELECT * FROM items").fetch(&pool)
         .collect::<Vec<Result<_, _>>>()

@@ -1,6 +1,7 @@
 use futures::stream::TryStreamExt;
 
 use crate::use_case::RefreshFeedError::MisshapedRssItem;
+use settings::ItemSelectionMismatchError;
 
 pub async fn load_items(
     feed_name: &str,
@@ -35,8 +36,8 @@ pub async fn load_items(
 pub enum RefreshFeedError {
     #[error("failed to fetch page")]
     Reqwest(#[from] reqwest::Error),
-    #[error("failed to convert page to rss item: {:?}", .0)]
-    RssConversion(#[from] settings::SelectError),
+    #[error("rss item selection failed")]
+    MismatchedItemSelection(#[from] ItemSelectionMismatchError),
     #[error("rss item conversion missing items")]
     MisshapedRssItem(&'static str),
     #[error("failed to save rss item to database")]
@@ -58,43 +59,39 @@ pub async fn refresh_feed(
 
         req.send().await?.text().await?
     };
+    let new_items = settings::to_rss_items(&page, &feed_settings.item)?;
 
-    let new_item = settings::to_rss_item(&page, &feed_settings.item)?;
+    if new_items.len() == 0 {
+        rocket::warn!("Found no items for feed {}", feed_name);
+    }
 
-    // use title to check for uniqueness
-    let should_insert = match load_items(feed_name, feed_settings, pool).await?.first() {
-        Some(last_item) if last_item.title != new_item.title => {
-            rocket::info!(r#"Title "{:?}" != "{:?}", updating"#, &last_item.title, &new_item.title);
-            true
-        }
-        None => {
-            rocket::info!("feed {} is empty", feed_name);
-            true
-        }
-        _ => {
-            rocket::info!("feed {} is up to date", feed_name);
-            false
-        }
-    };
+    for new_item in new_items {
+        let should_insert = sqlx::query!(
+            r#"SELECT * FROM items WHERE feed_name = (?) AND title = (?)"#,
+            feed_name,
+            new_item.title
+        ).fetch_optional(pool).await?.is_none();
 
-    if should_insert {
-        // unwrap here??
-        let channel_name = feed_settings.channel.title.clone();
-        let title = new_item.title.ok_or(RefreshFeedError::MisshapedRssItem("title not found"))?;
-        let description = new_item.description.ok_or(MisshapedRssItem("description not found"))?;
-        let guid = new_item.guid.unwrap_or_else(|| guid(uuid::Uuid::new_v4().to_string()));
-        let pub_date = chrono::Utc::now();
-        sqlx::query!(r#"
-            INSERT INTO items (
-                feed_name,
-                channel_name,
-                title,
-                description,
-                guid,
-                pub_date
-            ) VALUES (?, ?, ?, ?, ?, ?)
-        "#, feed_name, channel_name, title, description, guid.value, pub_date)
-            .execute(pool).await?;
+        if should_insert {
+            // unwrap here??
+            rocket::info!("Feed {} has new item {:?}", feed_name, &new_item.title);
+            let channel_name = feed_settings.channel.title.clone();
+            let title = new_item.title.ok_or(RefreshFeedError::MisshapedRssItem("title not found"))?;
+            let description = new_item.description.ok_or(MisshapedRssItem("description not found"))?;
+            let guid = new_item.guid.unwrap_or_else(|| guid(uuid::Uuid::new_v4().to_string()));
+            let pub_date = chrono::Utc::now();
+            sqlx::query!(r#"
+                INSERT INTO items (
+                    feed_name,
+                    channel_name,
+                    title,
+                    description,
+                    guid,
+                    pub_date
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            "#, feed_name, channel_name, title, description, guid.value, pub_date)
+                .execute(pool).await?;
+        }
     }
 
     Ok(())

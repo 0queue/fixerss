@@ -27,9 +27,12 @@ fn execute_config(rss_config: &settings::FeedSettings) -> std::result::Result<()
     };
 
     println!("parsing page");
-    let item = settings::to_rss_item(&page, &rss_config.item)?;
-    println!("title: {:?}", item.title);
-    println!("description: {:?}", item.description);
+
+    for item in settings::to_rss_items(&page, &rss_config.item)? {
+        println!("-------");
+        println!("title: {:?}", item.title);
+        println!("description: {:?}", item.description);
+    }
 
     Ok(())
 }

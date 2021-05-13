@@ -28,8 +28,8 @@ async fn refreshing_with_no_items_results_in_one_item() {
         channel.title = "website"
         channel.link = "{}"
         channel.description = "description"
-        item.title = {{ css = "h1", inner_html = true }}
-        item.description = {{ css = "p" }}
+        item.title = {{ selector = "h1", inner_html = true }}
+        item.description = {{ selector = "p" }}
     "#, &mock_server.uri());
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();
@@ -73,8 +73,8 @@ async fn refreshing_with_item_of_same_title_results_in_no_update() {
         channel.title = "website"
         channel.link = "{}"
         channel.description = "description"
-        item.title = {{ css = "h1", inner_html = true }}
-        item.description = {{ css = "p" }}
+        item.title = {{ selector = "h1", inner_html = true }}
+        item.description = {{ selector = "p" }}
     "#, &mock_server.uri());
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();
@@ -139,8 +139,8 @@ async fn refreshing_with_one_different_title_results_in_two_items() {
         channel.title = "website"
         channel.link = "{}"
         channel.description = "description"
-        item.title = {{ css = "h1", inner_html = true }}
-        item.description = {{ css = "p" }}
+        item.title = {{ selector = "h1", inner_html = true }}
+        item.description = {{ selector = "p" }}
     "#, &mock_server.uri());
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();

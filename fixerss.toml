@@ -4,8 +4,8 @@ stale_after = { days = 1 }                                              # the in
 channel.title = "xkcd.com"                                              # RSS channel title (display purposes)
 channel.link = "https://xkcd.com"                                       # link to scrape for new content, and also the given RSS link
 channel.description = "xkcd.com: A webcomic of romance and math humor." # RSS channel description (display purposes)
-item.title = { css = "div#ctitle", inner_html = true }                  # CSS selector to scrape the title from channel.link.
+item.title = { selector = "div#ctitle", inner_html = true }             # CSS selector to scrape the title from channel.link.
                                                                         #   inner_html uses the content of what is selected
                                                                         #   the table may also contain a "text" field, which is a fallback value
                                                                         #   to use if selection fails
-item.description = { css = "div#comic img" }                            # CSS selector to scrape the content of the RSS item
+item.description = { selector = "div#comic img" }                       # CSS selector to scrape the content of the RSS item
