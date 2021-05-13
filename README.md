@@ -1,6 +1,6 @@
 # fixerss
 
-A pair of programs to scrape website and generate an rss feed.
+A pair of programs to scrape a website and generate an rss feed.
 
 ## Building
 
