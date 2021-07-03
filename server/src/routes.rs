@@ -1,7 +1,6 @@
-use rocket::http::ContentType;
 use rocket::http::Status;
-use rocket::response::Content;
-use rocket_contrib::json::Json;
+use rocket::response::content;
+use rocket::serde::json::Json;
 
 use crate::settings_guard::SettingsGuard;
 use crate::use_case;
@@ -13,7 +12,7 @@ pub async fn health_check() -> Status {
 
 #[rocket::get("/")]
 pub async fn list_feeds(
-    fixerss_settings: rocket::State<'_, settings::FixerssSettings>
+    fixerss_settings: &rocket::State<settings::FixerssSettings>
 ) -> Json<Vec<String>> {
     Json(fixerss_settings.keys().cloned().collect())
 }
@@ -22,8 +21,8 @@ pub async fn list_feeds(
 pub async fn rss_xml(
     feed_name: String,
     feed_settings: SettingsGuard,
-    pool: rocket::State<'_, sqlx::SqlitePool>,
-) -> Result<Content<String>, Status> {
+    pool: &rocket::State<sqlx::SqlitePool>,
+) -> Result<content::Xml<String>, Status> {
     let channel = {
         let items = use_case::load_items(&feed_name, &feed_settings, &pool).await
             .map_err(|e| {
@@ -40,5 +39,5 @@ pub async fn rss_xml(
         channel
     };
 
-    Ok(Content(ContentType::XML, channel.to_string()))
+    Ok(content::Xml(channel.to_string()))
 }

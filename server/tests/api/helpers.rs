@@ -30,9 +30,9 @@ pub async fn spawn_app() -> TestApp {
     let settings = server::build_settings(&server_config).await.unwrap();
 
     let rocket = server::build_rocket(figment, pool.clone(), settings)
-        .attach(rocket::fairing::AdHoc::on_launch("port listener", |r| {
+        .attach(rocket::fairing::AdHoc::on_liftoff("port listener", |r| Box::pin(async move {
             let _ = tx.send(r.config().clone());
-        }));
+        })));
 
     let _ = tokio::spawn(rocket.launch());
 

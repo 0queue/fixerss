@@ -17,7 +17,7 @@ impl<'r> rocket::request::FromRequest<'r> for SettingsGuard {
     type Error = ();
 
     async fn from_request(req: &'r rocket::Request<'_>) -> Outcome<Self, Self::Error> {
-        let settings: rocket::State<'r, settings::FixerssSettings> = rocket::try_outcome!(req.guard().await);
+        let settings: &rocket::State<settings::FixerssSettings> = rocket::outcome::try_outcome!(req.guard().await);
 
         // seems like the wrong way but can't find the right way
         let feed_name = match req.param::<String>(0) {

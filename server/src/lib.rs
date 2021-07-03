@@ -74,7 +74,7 @@ pub fn build_rocket(
     figment: rocket::figment::Figment,
     pool: sqlx::SqlitePool,
     settings: settings::FixerssSettings,
-) -> rocket::Rocket {
+) -> rocket::Rocket<rocket::Build> {
     rocket::custom(figment)
         .mount("/", routes![routes::health_check, routes::rss_xml, routes::list_feeds])
         .manage(settings)

@@ -7,8 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ureq = "2.1.0"
+ureq = "2.1.1"
 settings = { path = "../settings" }
-anyhow = "1.0.40"
+anyhow = "1.0.41"
 argh = "0.1.4"
 toml = "0.5.8"
