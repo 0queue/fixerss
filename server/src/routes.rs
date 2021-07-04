@@ -1,3 +1,4 @@
+use prometheus::Encoder;
 use rocket::http::Status;
 use rocket::response::content;
 use rocket::serde::json::Json;
@@ -8,6 +9,17 @@ use crate::use_case;
 #[rocket::get("/health_check")]
 pub async fn health_check() -> Status {
     Status::Ok
+}
+
+#[rocket::get("/metrics")]
+pub async fn metrics() -> Result<String, Status> {
+    let mut buffer = Vec::new();
+    let encoder = prometheus::TextEncoder::new();
+
+    encoder.encode(&prometheus::gather(), &mut buffer)
+        .map_err(|_| Status::InternalServerError)?;
+
+    Ok(String::from_utf8(buffer).map_err(|_| Status::InternalServerError)?)
 }
 
 #[rocket::get("/")]

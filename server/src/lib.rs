@@ -45,7 +45,6 @@ pub fn build_figment() -> rocket::figment::Figment {
 }
 
 pub async fn build_pool(filename: &str) -> Result<sqlx::SqlitePool, sqlx::Error> {
-
     if filename != ":memory:" && tokio::fs::metadata(filename).await.is_err() {
         // ignore errors, sqlite will learn about any soon enough
         let _ = tokio::fs::File::create(filename).await;
@@ -76,7 +75,7 @@ pub fn build_rocket(
     settings: settings::FixerssSettings,
 ) -> rocket::Rocket<rocket::Build> {
     rocket::custom(figment)
-        .mount("/", routes![routes::health_check, routes::rss_xml, routes::list_feeds])
+        .mount("/", routes![routes::health_check, routes::rss_xml, routes::list_feeds, routes::metrics])
         .manage(settings)
         .manage(pool)
 }
