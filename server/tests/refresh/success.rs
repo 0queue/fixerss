@@ -35,7 +35,13 @@ async fn refreshing_with_no_items_results_in_one_item() {
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();
 
-    let res = server::use_case::refresh_feed("website", &feed_settings.get("website").unwrap(), &pool, &client).await;
+    let res = server::use_case::refresh_feed(
+        "website",
+        &feed_settings.get("website").unwrap(),
+        &pool,
+        &client,
+        &super::dummy_counter(),
+    ).await;
 
     assert_eq!(res.unwrap(), ());
 
@@ -86,6 +92,7 @@ async fn refreshing_with_item_of_same_title_results_in_no_update() {
         &feed_settings.get("website").unwrap(),
         &pool,
         &client,
+        &super::dummy_counter(),
     ).await;
 
     assert_eq!(res.unwrap(), ());
@@ -105,6 +112,7 @@ async fn refreshing_with_item_of_same_title_results_in_no_update() {
         &feed_settings.get("website").unwrap(),
         &pool,
         &client,
+        &super::dummy_counter(),
     ).await;
 
     assert_eq!(res.unwrap(), ());
@@ -152,7 +160,8 @@ async fn refreshing_with_one_different_title_results_in_two_items() {
         "website",
         &feed_settings.get("website").unwrap(),
         &pool,
-        &client
+        &client,
+        &super::dummy_counter(),
     ).await;
 
     assert_eq!(res.unwrap(), ());
@@ -175,7 +184,8 @@ async fn refreshing_with_one_different_title_results_in_two_items() {
         "website",
         &feed_settings.get("website").unwrap(),
         &pool,
-        &client
+        &client,
+        &super::dummy_counter(),
     ).await;
 
     assert_eq!(res.unwrap(), ());
@@ -233,7 +243,8 @@ async fn refreshing_while_fresh_does_nothing() {
         "website",
         &feed_settings.get("website").unwrap(),
         &pool,
-        &client
+        &client,
+        &super::dummy_counter(),
     ).await;
 
     assert_eq!(res.unwrap(), ());

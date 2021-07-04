@@ -52,6 +52,7 @@ pub async fn refresh_feed(
     feed_settings: &settings::FeedSettings,
     pool: &sqlx::SqlitePool,
     client: &reqwest::Client,
+    scrape_counter: &prometheus::IntCounterVec,
 ) -> Result<(), RefreshFeedError> {
     let last_fetch_timestamp = sqlx::query!(r#"SELECT inserted_at FROM items ORDER BY inserted_at DESC LIMIT 1"#)
         .fetch_optional(pool).await?.map(|r| r.inserted_at);
@@ -73,6 +74,9 @@ pub async fn refresh_feed(
         if let Some(user_agent) = &feed_settings.user_agent {
             req = req.header(reqwest::header::USER_AGENT, user_agent.clone())
         }
+
+        let _ = scrape_counter.get_metric_with_label_values(&[feed_name])
+            .map(|m| m.inc());
 
         req.send().await?.text().await?
     };

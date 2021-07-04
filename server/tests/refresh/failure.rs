@@ -40,6 +40,7 @@ async fn failure_to_find_title_results_in_err() {
         &feed_settings.get("website").unwrap(),
         &pool,
         &client,
+        &super::dummy_counter(),
     ).await;
 
     assert!(matches!(res, Err(server::use_case::RefreshFeedError::MismatchedItemSelection(_))));
@@ -82,6 +83,7 @@ async fn failure_to_fetch_webpage_results_in_err() {
         &feed_settings.get("website").unwrap(),
         &pool,
         &client,
+        &super::dummy_counter(),
     ).await;
 
     // 404 results in an empty body, which is a warning, not an error

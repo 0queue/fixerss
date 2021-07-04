@@ -3,8 +3,12 @@ use std::ops::Add;
 use std::str::FromStr;
 use futures::FutureExt;
 use tap::Pipe;
-use tap::Tap;
 use rand::Rng;
+
+lazy_static::lazy_static! {
+    static ref SCRAPE_COUNTER: prometheus::IntCounterVec =
+        prometheus::register_int_counter_vec!("fixerss_scrapes", "Number of times a site was scraped", &["feed_name"]).unwrap();
+}
 
 #[rocket::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -29,6 +33,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     feed_settings,
                     &pool_clone,
                     &client,
+                    &SCRAPE_COUNTER
                 ).await {
                     rocket::warn!("Error when refreshing {}: {}", feed_settings.channel.title, e);
                 }
