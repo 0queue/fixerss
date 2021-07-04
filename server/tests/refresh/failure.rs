@@ -23,6 +23,7 @@ async fn failure_to_find_title_results_in_err() {
         .await;
 
     let contents = format!(r#"
+        refresh_interval = "whatever"
         [website]
         stale_after = {{ days = 1 }}
         channel.title = "website"
@@ -64,6 +65,7 @@ async fn failure_to_fetch_webpage_results_in_err() {
         .await;
 
     let contents = format!(r#"
+        refresh_interval = "whatever"
         [website]
         stale_after = {{ days = 1 }}
         channel.title = "website"

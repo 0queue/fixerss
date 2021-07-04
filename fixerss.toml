@@ -1,3 +1,7 @@
+refresh_interval = "0 0 8,12,18 * * * "                                 # cron string of when to refresh. individual feeds will only scrape if the
+                                                                        #   stale_after duration has passed.  String format from cron crate:
+                                                                        #   sec  min   hour   day of month   month   day of week   year
+                                                                        #
 [xkcd]                                                                  # id of the feed, used in the url: /xkcd/rss.xml.
 stale_after = { days = 1 }                                              # the interval of how often to check for new content
 # user_agent = "string"                                                 # Optional field to override the default user agent when scraping.  Some sites are picky

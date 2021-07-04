@@ -61,7 +61,7 @@ pub async fn refresh_feed(
     };
     let new_items = settings::to_rss_items(&page, &feed_settings.item)?;
 
-    if new_items.len() == 0 {
+    if new_items.is_empty() {
         rocket::warn!("Found no items for feed {}", feed_name);
     }
 

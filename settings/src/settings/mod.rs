@@ -3,6 +3,9 @@ mod selector;
 
 #[derive(serde_derive::Deserialize, Debug)]
 pub struct FixerssSettings {
+
+    pub refresh_interval: String,
+
     #[serde(flatten)]
     inner: std::collections::HashMap<String, FeedSettings>,
 }

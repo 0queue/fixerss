@@ -1,43 +1,76 @@
+use std::ops::Sub;
+use std::ops::Add;
+use std::str::FromStr;
+use futures::FutureExt;
+use tap::Pipe;
+use tap::Tap;
+use rand::Rng;
+
 #[rocket::main]
 async fn main() -> Result<(), anyhow::Error> {
     let figment = server::build_figment();
     let server_config = figment.extract::<server::ServerConfig>()?;
     let pool = server::build_pool(&server_config.history_file).await?;
     let settings = server::build_settings(&server_config).await?;
+    let settings_clone = settings.clone();
 
-    // One clone to give to each refresher, and one clone of that clone to give to each future
-    let (cancellers, join_handles): (Vec<_>, Vec<_>) = settings.iter().map(|(feed_name, feed_settings)| {
-        let feed_name_outer = feed_name.clone();
-        let feed_settings_outer = feed_settings.clone();
-        let pool_clone_outer = pool.clone();
-        let client_outer = reqwest::Client::new();
-        server::start_refresher(feed_name.clone(), feed_settings.stale_after.clone().into(), move || {
-            let feed_name_inner = feed_name_outer.clone();
-            let feed_settings_inner = feed_settings_outer.clone();
-            let pool_clone_inner = pool_clone_outer.clone();
-            let client_inner = client_outer.clone();
-            async move {
+    let (canceller, rx) = tokio::sync::oneshot::channel::<()>();
+    let schedule = cron::Schedule::from_str(&settings.refresh_interval)?;
+    let client = reqwest::Client::new();
+    let pool_clone = pool.clone();
+
+    let join_handle = tokio::spawn(async move {
+        let mut rx = rx.fuse();
+
+        for date in schedule.upcoming(chrono::Utc) {
+            for (feed_name, feed_settings) in &settings_clone {
+
+                // TODO check if stale_after is true
+
                 if let Err(e) = server::use_case::refresh_feed(
-                    &feed_name_inner,
-                    &feed_settings_inner,
-                    &pool_clone_inner,
-                    &client_inner
+                    feed_name,
+                    feed_settings,
+                    &pool_clone,
+                    &client,
                 ).await {
-                    rocket::warn!("Error when refreshing {}: {}", feed_settings_inner.channel.title.clone(), e);
+                    rocket::warn!("Error when refreshing {}: {}", feed_settings.channel.title, e);
                 }
             }
-        })
-    }).unzip();
+
+            let jitter = (0..10 * 60)
+                .pipe(|range| rand::thread_rng().gen_range(range))
+                .pipe(std::time::Duration::from_secs)
+                .add(std::time::Duration::from_secs(5 * 60));
+
+            let sleeper = date
+                .sub(chrono::Utc::now())
+                .tap(|d| {
+                    println!("waiting {} minutes", d.num_minutes());
+                })
+                .to_std()
+                .unwrap_or_else(|_| {
+                    rocket::info!("Failed to convert chrone::Duration to std::time::Duration");
+                    std::time::Duration::from_secs(60 * 60)
+                })
+                .add(jitter)
+                .pipe(tokio::time::sleep)
+                .fuse();
+
+            futures::pin_mut!(sleeper);
+
+            futures::select! {
+                _ = rx => break,
+                () = sleeper => continue,
+            }
+        }
+    });
 
     server::build_rocket(figment, pool, settings)
         .launch()
         .await?;
 
-    for c in cancellers {
-        let _ = c.send(());
-    }
-
-    let _ = futures::future::join_all(join_handles).await;
+    let _ = canceller.send(());
+    let _ = join_handle.await;
 
     Ok(())
 }

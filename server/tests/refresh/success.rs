@@ -23,6 +23,7 @@ async fn refreshing_with_no_items_results_in_one_item() {
         .await;
 
     let contents = format!(r#"
+        refresh_interval = "whatever"
         [website]
         stale_after = {{ days = 1 }}
         channel.title = "website"
@@ -68,6 +69,7 @@ async fn refreshing_with_item_of_same_title_results_in_no_update() {
         .await;
 
     let contents = format!(r#"
+        refresh_interval = "whatever"
         [website]
         stale_after = {{ days = 1 }}
         channel.title = "website"
@@ -134,6 +136,7 @@ async fn refreshing_with_one_different_title_results_in_two_items() {
         .await;
 
     let contents = format!(r#"
+        refresh_interval = "whatever"
         [website]
         stale_after = {{ days = 1 }}
         channel.title = "website"

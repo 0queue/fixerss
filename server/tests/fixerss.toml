@@ -1,3 +1,5 @@
+refresh_interval = "not parsed"
+
 [xkcd]
 stale_after = { days = 1 }
 channel.title = "xkcd.com"
