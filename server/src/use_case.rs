@@ -1,7 +1,10 @@
+use chrono::NaiveDateTime;
 use futures::stream::TryStreamExt;
+use tap::Pipe;
+
+use settings::ItemSelectionMismatchError;
 
 use crate::use_case::RefreshFeedError::MisshapedRssItem;
-use settings::ItemSelectionMismatchError;
 
 pub async fn load_items(
     feed_name: &str,
@@ -50,6 +53,20 @@ pub async fn refresh_feed(
     pool: &sqlx::SqlitePool,
     client: &reqwest::Client,
 ) -> Result<(), RefreshFeedError> {
+    let last_fetch_timestamp = sqlx::query!(r#"SELECT inserted_at FROM items ORDER BY inserted_at DESC LIMIT 1"#)
+        .fetch_optional(pool).await?.map(|r| r.inserted_at);
+
+    if let Some(last_fetch_timestamp) = last_fetch_timestamp {
+        let then = NaiveDateTime::from_timestamp(last_fetch_timestamp, 0)
+            .pipe(|ndt| chrono::DateTime::<chrono::Utc>::from_utc(ndt, chrono::Utc));
+
+        let is_fresh = (chrono::Utc::now() - then) < feed_settings.stale_after.clone().into();
+
+        if is_fresh {
+            return Ok(());
+        }
+    }
+
     rocket::info!("fetching {}", feed_settings.channel.link);
     let page = {
         let mut req = client.get(&feed_settings.channel.link);
@@ -79,7 +96,8 @@ pub async fn refresh_feed(
             let title = new_item.title.ok_or(RefreshFeedError::MisshapedRssItem("title not found"))?;
             let description = new_item.description.ok_or(MisshapedRssItem("description not found"))?;
             let guid = new_item.guid.unwrap_or_else(|| guid(uuid::Uuid::new_v4().to_string()));
-            let pub_date = chrono::Utc::now();
+            let pub_date = chrono::Utc::now(); // TODO should be parsed from page
+            let inserted_at = chrono::Utc::now().timestamp();
             sqlx::query!(r#"
                 INSERT INTO items (
                     feed_name,
@@ -87,9 +105,10 @@ pub async fn refresh_feed(
                     title,
                     description,
                     guid,
-                    pub_date
-                ) VALUES (?, ?, ?, ?, ?, ?)
-            "#, feed_name, channel_name, title, description, guid.value, pub_date)
+                    pub_date,
+                    inserted_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            "#, feed_name, channel_name, title, description, guid.value, pub_date, inserted_at)
                 .execute(pool).await?;
         }
     }

@@ -22,11 +22,8 @@ async fn main() -> Result<(), anyhow::Error> {
     let join_handle = tokio::spawn(async move {
         let mut rx = rx.fuse();
 
-        for date in schedule.upcoming(chrono::Utc) {
+        for date in schedule.upcoming(chrono::Local) {
             for (feed_name, feed_settings) in &settings_clone {
-
-                // TODO check if stale_after is true
-
                 if let Err(e) = server::use_case::refresh_feed(
                     feed_name,
                     feed_settings,
@@ -43,10 +40,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 .add(std::time::Duration::from_secs(5 * 60));
 
             let sleeper = date
-                .sub(chrono::Utc::now())
-                .tap(|d| {
-                    println!("waiting {} minutes", d.num_minutes());
-                })
+                .sub(chrono::Local::now())
                 .to_std()
                 .unwrap_or_else(|_| {
                     rocket::info!("Failed to convert chrone::Duration to std::time::Duration");

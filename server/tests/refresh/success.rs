@@ -166,8 +166,9 @@ async fn refreshing_with_one_different_title_results_in_two_items() {
     assert_eq!(&items[0].as_ref().unwrap().title, "This is a website");
     assert_eq!(&items[0].as_ref().unwrap().description, "<p>And this is content</p>");
 
-    // for test purposes, change the old title to something different
+    // for test purposes, change the old title to something different and turn back time
     sqlx::query!(r#"UPDATE items SET title = "overridden""#).execute(&pool).await.unwrap();
+    sqlx::query!(r#"UPDATE items SET inserted_at = 0"#).execute(&pool).await.unwrap();
 
     // second refresh
     let res = server::use_case::refresh_feed(
@@ -184,6 +185,59 @@ async fn refreshing_with_one_different_title_results_in_two_items() {
         .await;
 
     assert_eq!(items.len(), 2);
+}
+
+#[rocket::async_test]
+async fn refreshing_while_fresh_does_nothing() {
+    let client = reqwest::Client::new();
+    let pool = server::build_pool(":memory:").await.unwrap();
+    let now = chrono::Utc::now();
+    let now_timestamp = now.timestamp();
+    let guid = rss::Guid::default();
+
+    let mock_server = wiremock::MockServer::start().await;
+
+    wiremock::Mock::given(method("GET"))
+        .and(path("/"))
+        .respond_with(ResponseTemplate::new(404))
+        .mount(&mock_server)
+        .await;
+
+    let contents = format!(r#"
+        refresh_interval = "whatever"
+        [website]
+        stale_after = {{ days = 1 }}
+        channel.title = "website"
+        channel.link = "{}"
+        channel.description = "description"
+        item.title = {{ selector = "h1", inner_html = true }}
+        item.description = {{ selector = "p" }}
+    "#, &mock_server.uri());
+
+    sqlx::query!(r#"
+        INSERT INTO items (
+            feed_name,
+            channel_name,
+            title,
+            description,
+            guid,
+            pub_date,
+            inserted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    "#, "feed", "channel", "title", "description", guid.value, now, now_timestamp)
+        .execute(&pool).await.unwrap();
+
+    let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();
+
+    let res = server::use_case::refresh_feed(
+        "website",
+        &feed_settings.get("website").unwrap(),
+        &pool,
+        &client
+    ).await;
+
+    assert_eq!(res.unwrap(), ());
+    assert_eq!(mock_server.received_requests().await.unwrap().len(), 0);
 }
 
 // TODO test with multiple feeds... will be a large test
