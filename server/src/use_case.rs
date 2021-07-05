@@ -54,7 +54,7 @@ pub async fn refresh_feed(
     client: &reqwest::Client,
     scrape_counter: &prometheus::IntCounterVec,
 ) -> Result<(), RefreshFeedError> {
-    let last_fetch_timestamp = sqlx::query!(r#"SELECT inserted_at FROM items ORDER BY inserted_at DESC LIMIT 1"#)
+    let last_fetch_timestamp = sqlx::query!(r#"SELECT inserted_at FROM items WHERE feed_name = (?) ORDER BY inserted_at DESC LIMIT 1"#, feed_name)
         .fetch_optional(pool).await?.map(|r| r.inserted_at);
 
     if let Some(last_fetch_timestamp) = last_fetch_timestamp {
