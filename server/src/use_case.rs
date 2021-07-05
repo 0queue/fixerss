@@ -64,6 +64,7 @@ pub async fn refresh_feed(
         let is_fresh = (chrono::Utc::now() - then) < feed_settings.stale_after.clone().into();
 
         if is_fresh {
+            rocket::info!("Still fresh: {}", feed_name);
             return Ok(());
         }
     }
