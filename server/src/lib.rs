@@ -2,14 +2,13 @@ use rocket::figment::Profile;
 use rocket::figment::providers::Env;
 use rocket::routes;
 
-pub use refresher::start_refresher;
 pub use server_config::ServerConfig;
+use sqlx::ConnectOptions;
 
 mod server_config;
 mod routes;
 mod settings_guard;
 pub mod use_case;
-mod refresher;
 
 #[derive(thiserror::Error, Debug)]
 pub enum BuildError {
@@ -50,8 +49,14 @@ pub async fn build_pool(filename: &str) -> Result<sqlx::SqlitePool, sqlx::Error>
         let _ = tokio::fs::File::create(filename).await;
     }
 
+    let uri = format!("sqlite:{}", filename);
+    let mut connect_options = uri.parse::<sqlx::sqlite::SqliteConnectOptions>()?;
+
+    // not sure why log_statements is not builder style
+    connect_options.log_statements(log::LevelFilter::Off);
+
     let pool = sqlx::sqlite::SqlitePoolOptions::new()
-        .connect(&format!("sqlite:{}", filename))
+        .connect_with(connect_options)
         .await?;
 
     sqlx::migrate!("./migrations")

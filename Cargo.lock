@@ -2006,13 +2006,14 @@ dependencies = [
 
 [[package]]
 name = "server"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "chrono",
  "cron",
  "futures",
  "lazy_static",
+ "log",
  "prometheus",
  "rand 0.8.4",
  "reqwest",

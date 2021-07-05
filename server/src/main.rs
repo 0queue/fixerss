@@ -27,6 +27,7 @@ async fn main() -> Result<(), anyhow::Error> {
         let mut rx = rx.fuse();
 
         for date in schedule.upcoming(chrono::Local) {
+            rocket::info!("Starting referesh...");
             for (feed_name, feed_settings) in &settings_clone {
                 if let Err(e) = server::use_case::refresh_feed(
                     feed_name,
@@ -54,6 +55,8 @@ async fn main() -> Result<(), anyhow::Error> {
                 .add(jitter)
                 .pipe(tokio::time::sleep)
                 .fuse();
+
+            rocket::info!("Done refresh, next at {}", date);
 
             futures::pin_mut!(sleeper);
 
