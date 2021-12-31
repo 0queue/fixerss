@@ -4,16 +4,25 @@ use std::str::FromStr;
 use futures::FutureExt;
 use tap::Pipe;
 use rand::Rng;
+use tracing_subscriber::util::SubscriberInitExt;
 
 lazy_static::lazy_static! {
     static ref SCRAPE_COUNTER: prometheus::IntCounterVec =
         prometheus::register_int_counter_vec!("fixerss_scrapes", "Number of times a site was scraped", &["feed_name"]).unwrap();
 }
 
+fn tracing_subscriber_init() {
+    let builder = tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env());
+
+    #[cfg(not(debug_assertions))] let builder = builder.json();
+
+    builder.finish().init();
+}
+
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    // TODO env filter + release build json
-    tracing_subscriber::fmt::init();
+    tracing_subscriber_init();
 
     let server_config = server::ServerConfig::from_env_or_default();
 
