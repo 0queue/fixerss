@@ -1,6 +1,6 @@
 use crate::helpers::spawn_app;
 
-#[rocket::async_test]
+#[tokio::test]
 async fn getting_index_returns_list_of_feeds() {
     let test_app = spawn_app().await;
 

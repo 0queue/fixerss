@@ -1,5 +1,7 @@
+use server::ServerConfig;
+
 pub struct TestApp {
-    pub config: rocket::Config,
+    pub config: ServerConfig,
     pub pool: sqlx::sqlite::SqlitePool,
     pub client: reqwest::Client,
 }
@@ -11,30 +13,31 @@ impl TestApp {
 }
 
 pub async fn spawn_app() -> TestApp {
-    // In zero2prod, he uses actix, which allows the users to bind to a port
-    // and pass it to the server.  That is still private in rocket, so instead
-    // I bound :0 to get a port and passed it in.  But the test consistently failed,
-    // because the test would move on during launch, and reqwest would try to connect
-    // before the random port was bound by rocket.  Luckily, the fairing on_launch callback
-    // occurs after binding, and provides the fully resolved configuration for the server,
-    // so use a oneshot channel to block on receiving that config
-    let (tx, rx) = tokio::sync::oneshot::channel::<rocket::Config>();
 
-    // build the dependencies similar to the normal main but without error handling and with overrides
-    let figment = server::build_figment()
-        .merge(("port", 0))
-        .merge(("settings_file", "./tests/fixerss.toml"))
-        .merge(("history_file", ":memory:"));
-    let server_config = figment.extract::<server::ServerConfig>().unwrap();
+    let tcp_listener = std::net::TcpListener::bind("0.0.0.0:0").unwrap();
+
+    let server_config = {
+        let mut server_config = ServerConfig::default();
+        server_config.settings_file = "./tests/fixerss.toml".to_string();
+        server_config.port = tcp_listener.local_addr().unwrap().port();
+        server_config
+    };
+
     let pool = server::build_pool(&server_config.history_file).await.unwrap();
-    let settings = server::build_settings(&server_config).await.unwrap();
+    let settings = std::sync::Arc::new(server::build_settings(&server_config).await.unwrap());
 
-    let rocket = server::build_rocket(figment, pool.clone(), settings)
-        .attach(rocket::fairing::AdHoc::on_liftoff("port listener", |r| Box::pin(async move {
-            let _ = tx.send(r.config().clone());
-        })));
+    let service = server::build_router()
+        .layer(axum::AddExtensionLayer::new(pool.clone()))
+        .layer(axum::AddExtensionLayer::new(settings))
+        .into_make_service();
 
-    let _ = tokio::spawn(rocket.launch());
+    let _ = tokio::spawn(async {
+        axum::Server::from_tcp(tcp_listener)
+            .unwrap()
+            .serve(service)
+            .await
+            .unwrap()
+    });
 
     let client = reqwest::ClientBuilder::new()
         .connect_timeout(std::time::Duration::from_secs(5))
@@ -42,7 +45,7 @@ pub async fn spawn_app() -> TestApp {
         .unwrap();
 
     TestApp {
-        config: rx.await.unwrap(),
+        config: server_config,
         pool,
         client,
     }

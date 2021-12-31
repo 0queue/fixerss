@@ -3,7 +3,7 @@ use wiremock::matchers::method;
 use wiremock::matchers::path;
 use wiremock::ResponseTemplate;
 
-#[rocket::async_test]
+#[tokio::test]
 async fn refreshing_with_no_items_results_in_one_item() {
     let client = reqwest::Client::new();
     let pool = server::build_pool(":memory:").await.unwrap();
@@ -55,7 +55,7 @@ async fn refreshing_with_no_items_results_in_one_item() {
     assert_eq!(&items[0].as_ref().unwrap().description, "<p>And this is content</p>");
 }
 
-#[rocket::async_test]
+#[tokio::test]
 async fn refreshing_with_item_of_same_title_results_in_no_update() {
     let client = reqwest::Client::new();
     let pool = server::build_pool(":memory:").await.unwrap();
@@ -124,7 +124,7 @@ async fn refreshing_with_item_of_same_title_results_in_no_update() {
     assert_eq!(items.len(), 1);
 }
 
-#[rocket::async_test]
+#[tokio::test]
 async fn refreshing_with_one_different_title_results_in_two_items() {
     let client = reqwest::Client::new();
     let pool = server::build_pool(":memory:").await.unwrap();
@@ -197,7 +197,7 @@ async fn refreshing_with_one_different_title_results_in_two_items() {
     assert_eq!(items.len(), 2);
 }
 
-#[rocket::async_test]
+#[tokio::test]
 async fn refreshing_while_fresh_does_nothing() {
     let client = reqwest::Client::new();
     let pool = server::build_pool(":memory:").await.unwrap();
@@ -234,7 +234,7 @@ async fn refreshing_while_fresh_does_nothing() {
             pub_date,
             inserted_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    "#, "feed", "channel", "title", "description", guid.value, now, now_timestamp)
+    "#, "website", "channel", "title", "description", guid.value, now, now_timestamp)
         .execute(&pool).await.unwrap();
 
     let feed_settings: settings::FixerssSettings = toml::from_str(&contents.trim()).unwrap();

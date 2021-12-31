@@ -3,7 +3,7 @@ use wiremock::matchers::method;
 use wiremock::matchers::path;
 use wiremock::ResponseTemplate;
 
-#[rocket::async_test]
+#[tokio::test]
 async fn failure_to_find_title_results_in_err() {
     let client = reqwest::Client::new();
     let pool = server::build_pool(":memory:").await.unwrap();
@@ -52,7 +52,7 @@ async fn failure_to_find_title_results_in_err() {
     assert_eq!(items.len(), 0);
 }
 
-#[rocket::async_test]
+#[tokio::test]
 async fn failure_to_fetch_webpage_results_in_err() {
     let client = reqwest::Client::new();
     let pool = server::build_pool(":memory:").await.unwrap();
