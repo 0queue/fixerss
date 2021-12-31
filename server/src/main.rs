@@ -10,12 +10,15 @@ lazy_static::lazy_static! {
         prometheus::register_int_counter_vec!("fixerss_scrapes", "Number of times a site was scraped", &["feed_name"]).unwrap();
 }
 
-#[rocket::main]
+#[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    let figment = server::build_figment();
-    let server_config = figment.extract::<server::ServerConfig>()?;
+    // TODO env filter + release build json
+    tracing_subscriber::fmt::init();
+
+    let server_config = server::ServerConfig::from_env_or_default();
+
     let pool = server::build_pool(&server_config.history_file).await?;
-    let settings = server::build_settings(&server_config).await?;
+    let settings = std::sync::Arc::new(server::build_settings(&server_config).await?);
     let settings_clone = settings.clone();
 
     let (canceller, rx) = tokio::sync::oneshot::channel::<()>();
@@ -27,16 +30,16 @@ async fn main() -> Result<(), anyhow::Error> {
         let mut rx = rx.fuse();
 
         for date in schedule.upcoming(chrono::Local) {
-            rocket::info!("Starting refresh...");
-            for (feed_name, feed_settings) in &settings_clone {
+            tracing::info!("Starting refresh...");
+            for (feed_name, feed_settings) in settings_clone.iter() {
                 if let Err(e) = server::use_case::refresh_feed(
                     feed_name,
                     feed_settings,
                     &pool_clone,
                     &client,
-                    &SCRAPE_COUNTER
+                    &SCRAPE_COUNTER,
                 ).await {
-                    rocket::warn!("Error when refreshing {}: {}", feed_settings.channel.title, e);
+                    tracing::warn!("Error when refreshing {}: {}", feed_settings.channel.title, e);
                 }
             }
 
@@ -49,14 +52,14 @@ async fn main() -> Result<(), anyhow::Error> {
                 .sub(chrono::Local::now())
                 .to_std()
                 .unwrap_or_else(|_| {
-                    rocket::info!("Failed to convert chrone::Duration to std::time::Duration");
+                    tracing::info!("Failed to convert chrone::Duration to std::time::Duration");
                     std::time::Duration::from_secs(60 * 60)
                 })
                 .add(jitter)
                 .pipe(tokio::time::sleep)
                 .fuse();
 
-            rocket::info!("Done refresh, next at {}", date);
+            tracing::info!("Done refresh, next at {}", date);
 
             futures::pin_mut!(sleeper);
 
@@ -67,8 +70,15 @@ async fn main() -> Result<(), anyhow::Error> {
         }
     });
 
-    server::build_rocket(figment, pool, settings)
-        .launch()
+    let service = server::build_router()
+        .layer(tower::ServiceBuilder::new()
+            .layer(tower_http::trace::TraceLayer::new_for_http())
+            .layer(axum::AddExtensionLayer::new(settings))
+            .layer(axum::AddExtensionLayer::new(pool)))
+        .into_make_service();
+
+    axum::Server::bind(&server_config.try_into()?)
+        .serve(service)
         .await?;
 
     let _ = canceller.send(());

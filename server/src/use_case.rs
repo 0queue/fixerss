@@ -64,12 +64,12 @@ pub async fn refresh_feed(
         let is_fresh = (chrono::Utc::now() - then) < feed_settings.stale_after.clone().into();
 
         if is_fresh {
-            rocket::info!("Still fresh: {}", feed_name);
+            tracing::info!("Still fresh: {}", feed_name);
             return Ok(());
         }
     }
 
-    rocket::info!("fetching {}", feed_settings.channel.link);
+    tracing::info!("fetching {}", feed_settings.channel.link);
     let page = {
         let mut req = client.get(&feed_settings.channel.link);
         if let Some(user_agent) = &feed_settings.user_agent {
@@ -84,7 +84,7 @@ pub async fn refresh_feed(
     let new_items = settings::to_rss_items(&page, &feed_settings.item)?;
 
     if new_items.is_empty() {
-        rocket::warn!("Found no items for feed {}", feed_name);
+        tracing::warn!("Found no items for feed {}", feed_name);
     }
 
     for new_item in new_items {
@@ -96,7 +96,7 @@ pub async fn refresh_feed(
 
         if should_insert {
             // unwrap here??
-            rocket::info!("Feed {} has new item {:?}", feed_name, &new_item.title);
+            tracing::info!("Feed {} has new item {:?}", feed_name, &new_item.title);
             let channel_name = feed_settings.channel.title.clone();
             let title = new_item.title.ok_or(RefreshFeedError::MisshapedRssItem("title not found"))?;
             let description = new_item.description.ok_or(MisshapedRssItem("description not found"))?;

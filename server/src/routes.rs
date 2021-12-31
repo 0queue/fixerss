@@ -1,45 +1,55 @@
+use axum::response::Response;
 use prometheus::Encoder;
-use rocket::http::Status;
-use rocket::response::content;
-use rocket::serde::json::Json;
 
-use crate::settings_guard::SettingsGuard;
 use crate::use_case;
 
-#[rocket::get("/health_check")]
-pub async fn health_check() -> Status {
-    Status::Ok
+pub async fn health_check() -> axum::http::StatusCode {
+    axum::http::StatusCode::OK
 }
 
-#[rocket::get("/metrics")]
-pub async fn metrics() -> Result<String, Status> {
+pub async fn metrics() -> Result<String, axum::http::StatusCode> {
     let mut buffer = Vec::new();
     let encoder = prometheus::TextEncoder::new();
 
     encoder.encode(&prometheus::gather(), &mut buffer)
-        .map_err(|_| Status::InternalServerError)?;
+        .map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    Ok(String::from_utf8(buffer).map_err(|_| Status::InternalServerError)?)
+    Ok(String::from_utf8(buffer).map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)?)
 }
 
-#[rocket::get("/")]
 pub async fn list_feeds(
-    fixerss_settings: &rocket::State<settings::FixerssSettings>
-) -> Json<Vec<String>> {
-    Json(fixerss_settings.keys().cloned().collect())
+    axum::extract::Extension(fixerss_settings): axum::extract::Extension<std::sync::Arc<settings::FixerssSettings>>
+) -> axum::Json<Vec<String>> {
+    axum::Json(fixerss_settings.keys().cloned().collect())
 }
 
-#[rocket::get("/<feed_name>/rss.xml")]
+#[derive(Clone, Copy, Debug)]
+pub struct Xml<T>(pub T);
+
+impl<T> axum::response::IntoResponse for Xml<T> where T: Into<axum::body::Full<axum::body::Bytes>> {
+    fn into_response(self) -> Response {
+        let mut res = axum::response::Response::new(axum::body::boxed(self.0.into()));
+        res.headers_mut().insert(
+            axum::http::header::CONTENT_TYPE,
+            axum::http::HeaderValue::from_static(mime::TEXT_XML.as_ref()),
+        );
+        res
+    }
+}
+
 pub async fn rss_xml(
-    feed_name: String,
-    feed_settings: SettingsGuard,
-    pool: &rocket::State<sqlx::SqlitePool>,
-) -> Result<content::Xml<String>, Status> {
+    axum::extract::Path(feed_name): axum::extract::Path<String>,
+    axum::extract::Extension(fixerss_settings): axum::extract::Extension<std::sync::Arc<settings::FixerssSettings>>,
+    axum::extract::Extension(pool): axum::extract::Extension<sqlx::SqlitePool>,
+) -> Result<Xml<String>, axum::http::StatusCode> {
+    let feed_settings = fixerss_settings.get(&feed_name)
+        .ok_or(axum::http::StatusCode::NOT_FOUND)?;
+
     let channel = {
         let items = use_case::load_items(&feed_name, &feed_settings, &pool).await
             .map_err(|e| {
-                rocket::warn!("Failed to load items: {:?}", e);
-                Status::InternalServerError
+                tracing::warn!("Failed to load items: {:?}", e);
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR
             })?;
 
         // the builder doesn't work with intellij, rip
@@ -51,5 +61,5 @@ pub async fn rss_xml(
         channel
     };
 
-    Ok(content::Xml(channel.to_string()))
+    Ok(Xml(channel.to_string()))
 }
