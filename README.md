@@ -36,7 +36,7 @@ cargo b --release
 
 To build, run this in the project root:
 ```shell
-docker build -t fixerss .
+docker build -t fixerss:<version> .
 ```
 
 And to run with the repo's example file with an in memory database,
@@ -48,15 +48,15 @@ docker run --rm -it -v "$(pwd)/fixerss.toml:/fixerss.toml:ro" -p 8000:8000 fixer
 
 ## Config
 
-[The usual Rocket configuration][1], prefixed with `FIXERSS_` instead of `ROCKET_`, plus:
-
 - `FIXERSS_SETTINGS_FILE`: location of the [fixerss.toml](./fixerss.toml) file. 
                            Defaults to `fixerss.toml`
 - `FIXERSS_HISTORY_FILE`: location of the SQLite database that holds generated
                           items.  Defaults to `:memory:`, which does not persist
                           anything to disk.  If anything other than `:memory:` is
                           used, the file will be created
+- `FIXERSS_ADDRESS`: address to bind to, defaults to `0.0.0.0`
+- `FIXERSS_PORT`: port to bind to, defaults to `8080`
 
-For more info on the settings file, see the annotated [fixerss.toml](./fixerss.toml).
+See [`server_config.rs`](server/src/server_config.rs) for more up to date info.
 
-[1]: https://rocket.rs/master/guide/configuration/#configuration
+For more info on the settings file, see the annotated [`fixerss.toml`](./fixerss.toml).

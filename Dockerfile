@@ -1,4 +1,4 @@
-FROM rust:1.53 as builder-tools
+FROM rust:1.57 as builder-tools
 RUN apt-get update && apt-get install -y musl-tools
 RUN rustup target add x86_64-unknown-linux-musl
 RUN cargo install sqlx-cli
@@ -15,7 +15,7 @@ FROM scratch
 WORKDIR /
 # until rocket supports SIGTERM I guess
 STOPSIGNAL SIGINT
-ENV FIXERSS_LOG_LEVEL=normal
+ENV RUST_LOG server=debug,tower_http::trace=debug
 ENV FIXERSS_ADDRESS=0.0.0.0
 COPY --from=builder /usr/src/target/x86_64-unknown-linux-musl/release/server /fixerss-server
 CMD ["/fixerss-server"]
