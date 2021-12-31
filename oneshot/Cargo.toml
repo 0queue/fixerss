@@ -2,13 +2,13 @@
 name = "oneshot"
 version = "0.2.0"
 authors = ["Thomas Harris <teh019283@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ureq = "2.1.1"
+ureq = "2.4.0"
 settings = { path = "../settings" }
-anyhow = "1.0.41"
-argh = "0.1.4"
+anyhow = "1.0.52"
+argh = "0.1.7"
 toml = "0.5.8"

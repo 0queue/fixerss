@@ -27,7 +27,7 @@ async fn main() -> Result<(), anyhow::Error> {
         let mut rx = rx.fuse();
 
         for date in schedule.upcoming(chrono::Local) {
-            rocket::info!("Starting referesh...");
+            rocket::info!("Starting refresh...");
             for (feed_name, feed_settings) in &settings_clone {
                 if let Err(e) = server::use_case::refresh_feed(
                     feed_name,
