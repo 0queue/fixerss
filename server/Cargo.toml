@@ -1,6 +1,6 @@
 [package]
 name = "server"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Thomas Harris <teh019283@gmail.com>"]
 edition = "2021"
 
@@ -33,6 +33,7 @@ axum = "0.4.3"
 tower-http = { version = "0.2.0", features = ["trace"] }
 mime = "0.3.16"
 tower = "0.4.11"
+envy = "0.4.2"
 
 [dev-dependencies]
 anyhow = "1.0.52"

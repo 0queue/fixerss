@@ -24,7 +24,8 @@ fn tracing_subscriber_init() {
 async fn main() -> Result<(), anyhow::Error> {
     tracing_subscriber_init();
 
-    let server_config = server::ServerConfig::from_env_or_default();
+    let server_config = envy::prefixed("FIXERSS_")
+        .from_env::<server::ServerConfig>()?;
 
     let pool = server::build_pool(&server_config.history_file).await?;
     let settings = std::sync::Arc::new(server::build_settings(&server_config).await?);
